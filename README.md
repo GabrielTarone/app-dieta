@@ -110,6 +110,8 @@ A identidade visual do NutriGo deve transmitir **saúde, naturalidade, leveza e
 
 ## 🖼️ Logo
 
+![alt text](image.png)
+
 O conceito do logo pode combinar elementos relacionados a:
 
 - Alimentação;
@@ -117,23 +119,22 @@ O conceito do logo pode combinar elementos relacionados a:
 - Comunidade;
 - Bem-estar.
 
-Uma possibilidade é utilizar um elemento visual associado a **uma folha, prato ou talher**, combinado com algum símbolo de conexão ou compartilhamento.
-
-O desenvolvimento do logo e suas aplicações será ser realizado no **Figma**.
-
 ## 🎨 Paleta de cores 
 
-| Cor             | Hexadecimal | Aplicação                     |
-| --------------- | ----------- | ----------------------------- |
-| Verde principal | `#`         | Ações principais e identidade |
-| Verde claro     | `#`         | Elementos secundários         |
-| Creme           | `#`         | Fundos                        |
-| Cinza escuro    | `#`         | Textos                        |
-| Branco          | `#`         | Fundos e contraste            |
+| Cor             | Hexadecimal | Aplicação                             |
+| --------------- | ----------- | ------------------------------------- |
+| Verde principal | `#4CAF6A`   | Ações principais e identidade         |
+| Verde claro     | `#A8D5B2`   | Elementos secundários                 |
+| Creme           | `#F5EFE4`   | Fundos                                |
+| Bege            | `#E8DCC2`   | Fundos secundários e detalhes visuais |
+| Cinza escuro    | `#333333`   | Textos                                |
+| Branco          | `#FFFFFF`   | Fundos e contraste                    |
 
 A combinação busca transmitir **saúde e naturalidade** por meio dos tons verdes, enquanto o creme e beje adiciona simplicidade e destaque às interações.
 
 ## 🔤 Tipografia
+
+![alt text](image-1.png)
 
 ### Principal
 
