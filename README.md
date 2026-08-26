@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # NutriGo 🥗
 
 O NutriGo é um aplicativo voltado para pessoas que desejam melhorar sua alimentação de forma simples, prática e social. A plataforma combina **compartilhamento de receitas, descoberta de novas opções alimentares e acompanhamento de hábitos**, criando um ambiente em que os usuários podem aprender, experimentar e evoluir juntos.
@@ -232,3 +233,18 @@ NutriGo/
 ---
 
 #
+=======
+# App de Dieta e Alimentação
+
+Aplicativo destinado ao auxílio no controle de alimentação e dieta dos usuários.
+
+## Status
+Em fase inicial de estruturação.
+
+## Branches
+- main: versão estável
+- development: desenvolvimento
+- feature/*: novas funcionalidades
+- fix/*: correções
+- docs/*: documentação
+>>>>>>> 38dc8034315cb43e208fc165529ec1e339d2e2e6
