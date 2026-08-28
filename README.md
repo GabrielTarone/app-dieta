@@ -110,7 +110,7 @@ A identidade visual do NutriGo deve transmitir **saúde, naturalidade, leveza e
 
 ## 🖼️ Logo
 
-<img src="./app-dieta/docs/imagens/logo.png" width="150">
+<img src="./docs/imagens/logo.png" width="150">
 
 O conceito do logo pode combinar elementos relacionados a:
 
@@ -135,19 +135,23 @@ A combinação busca transmitir **saúde e naturalidade** por meio dos tons verd
 ## 🔤 Tipografia e Interface
 
 <p align="center">
-  <img src="./app-dieta/docs/imagens/home.jpeg" width="220">
-  <img src="./app-dieta/docs/imagens/explorar.jpeg" width="220">
-  <img src="./app-dieta/docs/imagens/favoritos.jpeg" width="220">
-  <img src="./app-dieta/docs/imagens/receita.jpeg" width="220">
-  <img src="./app-dieta/docs/imagens/perfil.jpeg" width="220">
+  <img src="./docs/imagens/home.jpeg" width="220">
+  <img src="./docs/imagens/explorar.jpeg" width="220">
+  <img src="./docs/imagens/favoritos.jpeg" width="220">
+  <img src="./docs/imagens/receita.jpeg" width="220">
+  <img src="./docs/imagens/perfil.jpeg" width="220">
 </p>
 
 <p align="center">
   <strong>Home</strong>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <strong>Feed</strong>
+  <strong>Explorar</strong>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <strong>Favoritos</strong>
   &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <strong>Receita</strong>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <strong>Perfil</strong>
 </p>
 
 ### Principal
