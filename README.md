@@ -132,9 +132,23 @@ O conceito do logo pode combinar elementos relacionados a:
 
 A combinação busca transmitir **saúde e naturalidade** por meio dos tons verdes, enquanto o creme e beje adiciona simplicidade e destaque às interações.
 
-## 🔤 Tipografia
+## 🔤 Tipografia e Interface
 
-![alt text](image-1.png)
+<p align="center">
+  <img src="home.jpeg" width="220">
+  <img src="explorar.jpeg" width="220">
+  <img src="favoritos.jpeg" width="220">
+  <img src="receita.jpeg" width="220">
+  <img src="perfil.jpeg" width="220">
+</p>
+
+<p align="center">
+  <strong>Home</strong>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <strong>Feed</strong>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  <strong>Receita</strong>
+</p>
 
 ### Principal
 
