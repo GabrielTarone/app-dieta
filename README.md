@@ -1,3 +1,15 @@
+## 👥 Integrantes
+
+| Integrante | RM |
+| ---------- | -- |
+| Bruno Anselmo da Silva | RM 566521 |
+| Fernando de Almeida Godoi Martines | RM 564820 |
+| Gabriel Ber Soares Tarone | RM 563520 |
+| Guilherme de Freitas Salgado | RM 562494 |
+| Vinicius Ribeiro Dias | RM 566468 |
+
+---
+
 # NutriGo 🥗
 
 O NutriGo é um aplicativo voltado para pessoas que desejam melhorar sua alimentação de forma simples, prática e social. A plataforma combina **compartilhamento de receitas, descoberta de novas opções alimentares e acompanhamento de hábitos**, criando um ambiente em que os usuários podem aprender, experimentar e evoluir juntos.
@@ -128,54 +140,81 @@ O conceito do logo pode combinar elementos relacionados a:
 | Creme           | `#F5EFE4`   | Fundos                                |
 | Bege            | `#E8DCC2`   | Fundos secundários e detalhes visuais |
 | Cinza escuro    | `#333333`   | Textos                                |
+| Cinza grafite   | `#4E4747`   | Ícones e texto de ícones              |
 | Branco          | `#FFFFFF`   | Fundos e contraste                    |
 
 A combinação busca transmitir **saúde e naturalidade** por meio dos tons verdes, enquanto o creme e beje adiciona simplicidade e destaque às interações.
 
-## 🔤 Tipografia e Interface
+## 🔤 Tipografia
+
+A identidade tipográfica do NutriGo utiliza a fonte **Inter** como fonte principal da interface.
+
+A escolha da fonte busca garantir boa legibilidade em dispositivos móveis, além de proporcionar uma aparência moderna, limpa e consistente em todas as telas do aplicativo.
+
+### Hierarquia tipográfica
 
 <p align="center">
-  <img src="./docs/imagens/home.jpeg" width="220">
-  <img src="./docs/imagens/explorar.jpeg" width="220">
-  <img src="./docs/imagens/favoritos.jpeg" width="220">
-  <img src="./docs/imagens/receita.jpeg" width="220">
-  <img src="./docs/imagens/perfil.jpeg" width="220">
+  <img src="./docs/imagens/tipografia.png" width="700">
 </p>
 
-<p align="center">
-  <strong>Home</strong>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <strong>Explorar</strong>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <strong>Favoritos</strong>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <strong>Receita</strong>
-  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-  <strong>Perfil</strong>
-</p>
+| Estilo | Fonte | Peso | Tamanho |
+| ------ | ----- | ---- | ------- |
+| Título Logo | Inter | Bold | 40px |
+| Subtítulo | Inter | Semi Bold | 16px |
+| Texto Normal | Inter | Regular | 12px |
+| Texto Normal Chamativo | Inter | Bold | 12px |
+| Texto Botão | Inter | Bold | 12px |
+| Título Chamativo | Inter | Semi Bold | 24px |
+| Subtítulo Chamativo | Inter | Bold | 16px |
 
-### Principal
+### Aplicação da tipografia
 
-**Poppins**
+A hierarquia tipográfica é utilizada para manter consistência visual entre as diferentes telas do aplicativo:
 
-Utilização:
+- **Título Logo:** utilizado para destacar o nome e a identidade do aplicativo;
+- **Subtítulo:** utilizado em informações secundárias e seções da interface;
+- **Texto Normal:** utilizado em descrições, informações e conteúdos gerais;
+- **Texto Normal Chamativo:** utilizado quando uma informação textual precisa de maior destaque;
+- **Texto Botão:** utilizado nos botões e ações da interface;
+- **Título Chamativo:** utilizado nos principais títulos das telas e conteúdos;
+- **Subtítulo Chamativo:** utilizado para destacar seções e informações importantes.
 
-- Títulos;
-- Botões;
-- Elementos de navegação.
+---
 
-### Secundária
+## 📱 Interface
 
-**Inter**
+As telas do NutriGo seguem a identidade visual definida para o projeto, utilizando a paleta de cores, tipografia e elementos visuais de forma consistente.
 
-Utilização:
-
-- Textos;
-- Descrições;
-- Informações de receitas;
-- Elementos de interface.
-
-As duas fontes apresentam boa legibilidade em dispositivos móveis e permitem criar uma interface moderna e acessível.
+<table>
+  <tr>
+    <td align="center">
+      <strong>Login</strong><br><br>
+      <img src="./docs/imagens/login.jpeg" width="220">
+    </td>
+    <td align="center">
+      <strong>Home</strong><br><br>
+      <img src="./docs/imagens/home.jpeg" width="220">
+    </td>
+    <td align="center">
+      <strong>Explorar Receitas</strong><br><br>
+      <img src="./docs/imagens/explorar.jpeg" width="220">
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <strong>Detalhes da Receita</strong><br><br>
+      <img src="./docs/imagens/receita.jpeg" width="220">
+    </td>
+    <td align="center">
+      <strong>Favoritos</strong><br><br>
+      <img src="./docs/imagens/favoritos.jpeg" width="220">
+    </td>
+    <td align="center">
+      <strong>Perfil</strong><br><br>
+      <img src="./docs/imagens/perfil.jpeg" width="220">
+    </td>
+  </tr>
+</table>
 
 ---
 
