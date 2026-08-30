@@ -1,12 +1,12 @@
-## 👥 Integrantes
+## 👥 Integrantes e responsabilidades
 
-| Integrante | RM |
-| ---------- | -- |
-| Bruno Anselmo da Silva | RM 566521 |
-| Fernando de Almeida Godoi Martines | RM 564820 |
-| Gabriel Ber Soares Tarone | RM 563520 |
-| Guilherme de Freitas Salgado | RM 562494 |
-| Vinicius Ribeiro Dias | RM 566468 |
+| Integrante | RM | Responsabilidades |
+| ---------- | -- | ----------------------- |
+| Bruno Anselmo da Silva | RM 566521 | Desenvolvimento de marca, modelo de negócio e pitch |
+| Fernando de Almeida Godoi Martines | RM 564820 | Identidade visual, tipografia, paleta de cores e padronização das interfaces |
+| Gabriel Ber Soares Tarone | RM 563520 | Documentação, README e organização da entrega |
+| Guilherme de Freitas Salgado | RM 562494 | Criação e organização das imagens, materiais visuais e estrutura |
+| Vinicius Ribeiro Dias | RM 566468 | Desenvolvimento da interface inicial, componentes e execução do projeto Flutter |
 
 ---
 
