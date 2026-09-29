@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../services/supabase/supabase_auth_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../main/main_screen.dart';
+import '../cadastro/cadastro_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,6 +14,10 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  final _authService = SupabaseAuthService();
+
+  bool _carregando = false;
+
   bool _senhaVisivel = false;
 
   final TextEditingController _emailController = TextEditingController();
@@ -22,7 +30,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _fazerLogin() {
+  Future<void> _fazerLogin() async {
     final email = _emailController.text.trim();
     final senha = _senhaController.text;
 
@@ -53,12 +61,49 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const MainScreen(),
-      ),
-    );
+    setState(() {
+      _carregando = true;
+    });
+
+    try {
+      await _authService.fazerLogin(
+        email: email,
+        senha: senha,
+      );
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const MainScreen(),
+        ),
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+        ),
+      );
+    } catch (e) {
+      debugPrint('ERRO AO FAZER LOGIN: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível fazer login.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _carregando = false;
+        });
+      }
+    }
   }
 
   @override
@@ -276,7 +321,7 @@ class _LoginPageState extends State<LoginPage> {
       width: double.infinity,
       height: 40,
       child: ElevatedButton(
-        onPressed: _fazerLogin,
+        onPressed: _carregando ? null : _fazerLogin,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppTheme.verdePrincipal,
           foregroundColor: AppTheme.branco,
@@ -405,7 +450,12 @@ class _LoginPageState extends State<LoginPage> {
 
           TextButton(
             onPressed: () {
-              // Cadastro será implementado depois
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const CadastroPage(),
+                ),
+              );
             },
             child: Text(
               'Criar conta',

@@ -5,6 +5,7 @@ import '../../core/widgets/recipe_card.dart';
 import '../../core/widgets/search_field.dart';
 import '../../models/recipe.dart';
 import '../detalhes_receita/detalhes_receita_page.dart';
+import '../../services/supabase/supabase_profile_service.dart';
 
 class HomePage extends StatefulWidget {
   final List<Recipe> receitas;
@@ -30,7 +31,30 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final _profileService = SupabaseProfileService();
+
   String _busca = '';
+  String _nomeUsuario = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarNomeUsuario();
+  }
+
+  Future<void> _carregarNomeUsuario() async {
+    try {
+      final nome = await _profileService.buscarNomeUsuarioAtual();
+
+      if (!mounted) return;
+
+      setState(() {
+        _nomeUsuario = nome;
+      });
+    } catch (e) {
+      debugPrint('ERRO AO CARREGAR PERFIL: $e');
+    }
+  }
 
   String _normalizarTexto(String texto) {
     return texto
@@ -192,7 +216,9 @@ class _HomePageState extends State<HomePage> {
           CrossAxisAlignment.start,
       children: [
         Text(
-          'Olá, Ricardo!',
+          _nomeUsuario.isEmpty
+              ? 'Olá!'
+              : 'Olá, $_nomeUsuario!',
           style: Theme.of(context)
               .textTheme
               .titleMedium

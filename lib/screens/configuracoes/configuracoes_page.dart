@@ -314,53 +314,41 @@ class _ConfiguracoesPageState
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(AppTheme.spacingLg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tema',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
+            child: RadioGroup<ThemeMode>(
+              groupValue: temaAtual,
+              onChanged: (value) {
+                if (value != null) {
+                  MyApp.of(context).mudarTema(value);
+                  Navigator.pop(context);
+                }
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tema',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
 
-                const SizedBox(height: AppTheme.spacingMd),
+                  const SizedBox(height: AppTheme.spacingMd),
 
-                RadioListTile<ThemeMode>(
-                  title: const Text('Sistema'),
-                  value: ThemeMode.system,
-                  groupValue: temaAtual,
-                  onChanged: (value) {
-                    if (value != null) {
-                      MyApp.of(context).mudarTema(value);
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
+                  const RadioListTile<ThemeMode>(
+                    title: Text('Sistema'),
+                    value: ThemeMode.system,
+                  ),
 
-                RadioListTile<ThemeMode>(
-                  title: const Text('Claro'),
-                  value: ThemeMode.light,
-                  groupValue: temaAtual,
-                  onChanged: (value) {
-                    if (value != null) {
-                      MyApp.of(context).mudarTema(value);
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
+                  const RadioListTile<ThemeMode>(
+                    title: Text('Claro'),
+                    value: ThemeMode.light,
+                  ),
 
-                RadioListTile<ThemeMode>(
-                  title: const Text('Escuro'),
-                  value: ThemeMode.dark,
-                  groupValue: temaAtual,
-                  onChanged: (value) {
-                    if (value != null) {
-                      MyApp.of(context).mudarTema(value);
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
-              ],
+                  const RadioListTile<ThemeMode>(
+                    title: Text('Escuro'),
+                    value: ThemeMode.dark,
+                  ),
+                ],
+              ),
             ),
           ),
         );

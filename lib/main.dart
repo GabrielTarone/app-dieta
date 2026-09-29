@@ -1,9 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/app_theme.dart';
 import 'screens/login/login_page.dart';
+import 'env.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await dotenv.load(fileName: '.env');
+
+  if (Env.supabaseConfigurado) {
+    await Supabase.initialize(
+      url: Env.supabaseUrl,
+      publishableKey: Env.supabaseAnonKey,
+    );
+  }
+
   runApp(const MyApp());
 }
 
