@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../models/recipe.dart';
@@ -10,7 +11,7 @@ import '../ajuda_suporte/ajuda_suporte_page.dart';
 import '../favoritos/favoritos_page.dart';
 import '../../services/supabase/supabase_auth_service.dart';
 
-class PerfilPage extends StatelessWidget {
+class PerfilPage extends StatefulWidget {
   final List<Recipe> favoritos;
   final void Function(Recipe) onFavoriteTap;
 
@@ -33,8 +34,49 @@ class PerfilPage extends StatelessWidget {
     required this.onEditarMinhaReceita,
   });
 
-  @override
-  Widget build(BuildContext context) {
+    @override
+    State<PerfilPage> createState() => _PerfilPageState();
+  }
+
+  class _PerfilPageState extends State<PerfilPage> {
+    String _nomeUsuario = '';
+    String _emailUsuario = '';
+
+    @override
+    void initState() {
+      super.initState();
+
+      final usuario = Supabase.instance.client.auth.currentUser;
+
+      _emailUsuario = usuario?.email ?? '';
+
+      _carregarPerfil();
+    }
+
+    Future<void> _carregarPerfil() async {
+      final usuario = Supabase.instance.client.auth.currentUser;
+
+      if (usuario == null) return;
+
+      try {
+        final perfil = await Supabase.instance.client
+            .from('profiles')
+            .select('nome')
+            .eq('id', usuario.id)
+            .single();
+
+        if (!mounted) return;
+
+        setState(() {
+          _nomeUsuario = perfil['nome']?.toString() ?? '';
+        });
+      } catch (e) {
+        debugPrint('ERRO AO CARREGAR PERFIL: $e');
+      }
+    }
+
+    @override
+    Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor:
           Theme.of(context).scaffoldBackgroundColor,
@@ -121,7 +163,7 @@ class PerfilPage extends StatelessWidget {
           child: Column(
             children: [
               Text(
-                'Ricardo Mendes',
+                _nomeUsuario.isEmpty ? 'Usuário' : _nomeUsuario,
                 style: Theme.of(context)
                     .textTheme
                     .headlineMedium,
@@ -130,7 +172,7 @@ class PerfilPage extends StatelessWidget {
               const SizedBox(height: 4),
 
               Text(
-                '@ricardomendes.nutrigo',
+                _emailUsuario,
                 style: Theme.of(context)
                     .textTheme
                     .bodyMedium
@@ -222,6 +264,7 @@ class PerfilPage extends StatelessWidget {
   Widget _buildMenu(BuildContext context) {
     return Column(
       children: [
+
         _buildMenuItem(
           context,
           icon: Icons.menu_book_outlined,
@@ -231,15 +274,15 @@ class PerfilPage extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (context) => MinhasReceitasPage(
-                  favoritos: favoritos,
-                  onFavoriteTap: onFavoriteTap,
-                  minhasReceitas: minhasReceitas,
+                  favoritos: widget.favoritos,
+                  onFavoriteTap: widget.onFavoriteTap,
+                  minhasReceitas: widget.minhasReceitas,
                   onAdicionarMinhaReceita:
-                      onAdicionarMinhaReceita,
+                      widget.onAdicionarMinhaReceita,
                   onRemoverMinhaReceita:
-                      onRemoverMinhaReceita,
+                      widget.onRemoverMinhaReceita,
                   onEditarMinhaReceita:
-                      onEditarMinhaReceita,
+                      widget.onEditarMinhaReceita,
                 ),
               ),
             );
@@ -255,8 +298,8 @@ class PerfilPage extends StatelessWidget {
               context,
               MaterialPageRoute(
                 builder: (context) => FavoritosPage(
-                  favoritos: favoritos,
-                  onFavoriteTap: onFavoriteTap,
+                  favoritos: widget.favoritos,
+                  onFavoriteTap: widget.onFavoriteTap,
                   mostrarVoltar: true,
                 ),
               ),
@@ -270,14 +313,18 @@ class PerfilPage extends StatelessWidget {
           context,
           icon: Icons.settings_outlined,
           title: 'Configurações',
-          onTap: () {
-            Navigator.push(
+          onTap: () async {
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) =>
                     const ConfiguracoesPage(),
               ),
             );
+
+            if (!mounted) return;
+
+            await _carregarPerfil();
           },
         ),
 

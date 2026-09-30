@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../core/theme/app_theme.dart';
 import '../../main.dart';
+import '../../services/supabase/supabase_auth_service.dart';
 
 class ConfiguracoesPage extends StatefulWidget {
   const ConfiguracoesPage({super.key});
@@ -12,7 +15,42 @@ class ConfiguracoesPage extends StatefulWidget {
 
 class _ConfiguracoesPageState
     extends State<ConfiguracoesPage> {
+  final _authService = SupabaseAuthService();
+
   bool _notificacoesAtivadas = true;
+
+  String _nomeUsuario = '';
+  String _emailUsuario = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarPerfil();
+  }
+
+  Future<void> _carregarPerfil() async {
+    final usuario = Supabase.instance.client.auth.currentUser;
+
+    if (usuario == null) return;
+
+    _emailUsuario = usuario.email ?? '';
+
+    try {
+      final perfil = await Supabase.instance.client
+          .from('profiles')
+          .select('nome')
+          .eq('id', usuario.id)
+          .single();
+
+      if (!mounted) return;
+
+      setState(() {
+        _nomeUsuario = perfil['nome']?.toString() ?? '';
+      });
+    } catch (e) {
+      debugPrint('ERRO AO CARREGAR PERFIL: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +120,7 @@ class _ConfiguracoesPageState
                 icon: Icons.person_outline,
                 title: 'Editar perfil',
                 onTap: () {
-                  // Implementaremos depois
+                  _mostrarEditarPerfil(context);
                 },
               ),
 
@@ -91,7 +129,7 @@ class _ConfiguracoesPageState
                 icon: Icons.lock_outline,
                 title: 'Alterar senha',
                 onTap: () {
-                  // Implementaremos depois
+                  _mostrarAlterarSenha(context);
                 },
               ),
 
@@ -282,6 +320,134 @@ class _ConfiguracoesPageState
     );
   }
 
+  void _mostrarAlterarSenha(BuildContext context) {
+    final novaSenhaController = TextEditingController();
+    final confirmarSenhaController = TextEditingController();
+
+    String? mensagemErro;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+          title: const Text('Alterar senha'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: novaSenhaController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Nova senha',
+                ),
+              ),
+
+              const SizedBox(height: AppTheme.spacingMd),
+
+              TextField(
+                controller: confirmarSenhaController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Confirmar nova senha',
+                ),
+              ),
+
+              if (mensagemErro != null) ...[
+                const SizedBox(height: AppTheme.spacingMd),
+
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    mensagemErro!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancelar'),
+            ),
+
+            ElevatedButton(
+              onPressed: () async {
+                final novaSenha = novaSenhaController.text.trim();
+                final confirmarSenha =
+                    confirmarSenhaController.text.trim();
+
+                if (novaSenha.isEmpty || confirmarSenha.isEmpty) {
+                  setDialogState(() {
+                    mensagemErro = 'Preencha todos os campos.';
+                  });
+                  return;
+                }
+
+                if (novaSenha.length < 6) {
+                  setDialogState(() {
+                    mensagemErro =
+                        'A senha deve ter pelo menos 6 caracteres.';
+                  });
+                  return;
+                }
+
+                if (novaSenha != confirmarSenha) {
+                  setDialogState(() {
+                    mensagemErro = 'As senhas não coincidem.';
+                  });
+                  return;
+                }
+
+                final navigator = Navigator.of(context);
+
+                try {
+                  await _authService.atualizarSenha(
+                    novaSenha: novaSenha,
+                  );
+
+                  if (!mounted) return;
+
+                  navigator.pop();
+
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Senha alterada com sucesso!',
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  debugPrint('ERRO AO ALTERAR SENHA: $e');
+
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Não foi possível alterar a senha.',
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Alterar senha'),
+            ),
+          ],
+        );
+      },
+    );
+  },
+);
+}
+
   void _mostrarSobre(BuildContext context) {
     showDialog(
       context: context,
@@ -298,6 +464,117 @@ class _ConfiguracoesPageState
                 Navigator.pop(context);
               },
               child: const Text('Fechar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _mostrarEditarPerfil(BuildContext context) {
+    final nomeController = TextEditingController(
+      text: _nomeUsuario,
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Editar perfil'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nomeController,
+                decoration: const InputDecoration(
+                  labelText: 'Nome',
+                ),
+              ),
+
+              const SizedBox(height: AppTheme.spacingMd),
+
+              TextField(
+                controller: TextEditingController(
+                  text: _emailUsuario,
+                ),
+                enabled: false,
+                decoration: const InputDecoration(
+                  labelText: 'E-mail',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final novoNome = nomeController.text.trim();
+
+                if (novoNome.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Digite um nome válido.'),
+                    ),
+                  );
+                  return;
+                }
+
+                final usuario = Supabase.instance.client.auth.currentUser;
+
+                if (usuario == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Usuário não autenticado.'),
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  await Supabase.instance.client
+                      .from('profiles')
+                      .update({
+                        'nome': novoNome,
+                      })
+                      .eq('id', usuario.id);
+
+                  if (!mounted) return;
+
+                  setState(() {
+                    _nomeUsuario = novoNome;
+                  });
+
+                  if (!context.mounted) return;
+
+                  Navigator.pop(context);
+
+                  ScaffoldMessenger.of(this.context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Perfil atualizado com sucesso!',
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  debugPrint('ERRO AO ATUALIZAR PERFIL: $e');
+
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Não foi possível atualizar o perfil.',
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: const Text('Salvar'),
             ),
           ],
         );
