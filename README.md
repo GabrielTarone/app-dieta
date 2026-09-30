@@ -48,7 +48,7 @@ O NutriGo encontra-se em desenvolvimento como aplicativo **Flutter/Dart**, com i
 
 O projeto já possui as seguintes funcionalidades implementadas:
 
-- **Autenticação:** cadastro, login e gerenciamento de sessão por meio do Supabase Auth.
+- **Autenticação:** cadastro, login, recuperação de senha por e-mail e gerenciamento de sessão por meio do Supabase Auth.
 - **Perfis:** armazenamento das informações dos usuários no PostgreSQL.
 - **Receitas:** cadastro, consulta, edição e exclusão de receitas, com persistência no Supabase.
 - **Imagens:** envio, substituição e exclusão de fotografias utilizando Supabase Storage.
@@ -73,6 +73,13 @@ O projeto continua em evolução, com melhorias e funcionalidades adicionais pre
 - Login com e-mail e senha;
 - Autenticação utilizando Supabase Auth;
 - Validação dos campos de cadastro e login;
+- Recuperação de senha por e-mail;
+- Envio do link de recuperação utilizando Supabase Auth;
+- Redirecionamento para o aplicativo por meio de deep link no Android;
+- Tela para definição e confirmação da nova senha;
+- Atualização da senha do usuário autenticado;
+- Encerramento da sessão de recuperação após a alteração da senha;
+- Retorno automático à tela de login após a redefinição;
 - Armazenamento do perfil do usuário;
 - Identificação do usuário autenticado;
 - Exibição dinâmica do nome do usuário na Home;
@@ -175,6 +182,46 @@ Atualmente, a integração contempla autenticação, gerenciamento de perfis, pe
 O cadastro é realizado utilizando o **Supabase Auth**.
 
 Cada usuário possui um identificador único (`UUID`) gerado pelo sistema de autenticação.
+
+### Recuperação de senha
+
+O aplicativo também possui fluxo de recuperação de senha integrado ao **Supabase Auth**.
+
+A partir da tela de login, o usuário pode solicitar a recuperação informando o e-mail cadastrado. O Supabase envia um e-mail contendo um link de recuperação.
+
+No Android, após a validação do link, o usuário é redirecionado para o NutriGo por meio do deep link:
+
+```text
+io.supabase.nutrigo://reset-password
+```
+
+O aplicativo identifica o evento de recuperação do Supabase e direciona o usuário para a tela de redefinição de senha.
+
+Fluxo de recuperação implementado:
+
+```text
+Esqueci minha senha
+        ↓
+Supabase Auth
+        ↓
+E-mail de recuperação
+        ↓
+Link de recuperação
+        ↓
+Deep link Android
+        ↓
+NutriGo
+        ↓
+Redefinição da senha
+        ↓
+Logout da sessão de recuperação
+        ↓
+Login com a nova senha
+```
+
+Após a alteração, a sessão utilizada durante a recuperação é encerrada e o usuário retorna à tela de login para acessar o aplicativo utilizando a nova senha.
+
+### Fluxo de cadastro
 
 Fluxo atual:
 
@@ -751,7 +798,6 @@ As próximas etapas do desenvolvimento incluem:
 ### 👤 Usuários e autenticação
 
 - Evoluir as funcionalidades do perfil do usuário;
-- Implementar recuperação de senha;
 - Aprimorar o gerenciamento de sessão;
 - Melhorar as mensagens de validação e tratamento de erros.
 

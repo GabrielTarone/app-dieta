@@ -37,6 +37,25 @@ class SupabaseAuthService implements AuthService {
     );
   }
 
+  Future<void> recuperarSenha({
+    required String email,
+  }) async {
+    await _client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'io.supabase.nutrigo://reset-password',
+    );
+  }
+
+  Future<void> atualizarSenha({
+    required String novaSenha,
+  }) async {
+    await _client.auth.updateUser(
+      UserAttributes(
+        password: novaSenha,
+      ),
+    );
+  }
+
   @override
   Future<void> sair() async {
     await _client.auth.signOut();

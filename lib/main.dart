@@ -4,7 +4,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'core/theme/app_theme.dart';
 import 'screens/login/login_page.dart';
+import 'screens/redefinir_senha/redefinir_senha_page.dart';
 import 'env.dart';
+import 'dart:async';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +39,38 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> {
   ThemeMode _themeMode = ThemeMode.system;
 
+  late final Stream<AuthState> _authStateChanges;
+  StreamSubscription<AuthState>? _authSubscription;
+
   ThemeMode get themeMode => _themeMode;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (Env.supabaseConfigurado) {
+      _authStateChanges = Supabase.instance.client.auth.onAuthStateChange;
+
+      _authSubscription = _authStateChanges.listen((data) {
+
+        if (data.event == AuthChangeEvent.passwordRecovery) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => const RedefinirSenhaPage(),
+              ),
+            );
+          });
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
 
   void mudarTema(ThemeMode novoTema) {
     setState(() {
@@ -46,6 +81,7 @@ class MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'NutriGo',
       debugShowCheckedModeBanner: false,
 

@@ -302,9 +302,78 @@ class _LoginPageState extends State<LoginPage> {
     return Align(
       alignment: Alignment.centerRight,
       child: TextButton(
-        onPressed: () {
-          // Funcionalidade será adicionada depois
-        },
+        onPressed: _carregando
+            ? null
+            : () async {
+                final email = _emailController.text.trim();
+
+                if (email.isEmpty ||
+                    !email.contains('@') ||
+                    !email.contains('.')) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Digite um e-mail válido para recuperar sua senha.',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+
+                setState(() {
+                  _carregando = true;
+                });
+
+                try {
+                  await _authService.recuperarSenha(
+                    email: email,
+                  );
+
+                  if (!context.mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Se o e-mail estiver cadastrado, você receberá '
+                        'instruções para recuperar sua senha.',
+                      ),
+                    ),
+                  );
+                } on AuthException catch (e) {
+                  if (!mounted) return;
+
+                  debugPrint(
+                    'ERRO AO SOLICITAR RECUPERAÇÃO: ${e.message}',
+                  );
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Não foi possível solicitar a recuperação. '
+                        'Tente novamente mais tarde.',
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  debugPrint('ERRO AO RECUPERAR SENHA: $e');
+
+                  if (!mounted) return;
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Não foi possível enviar a solicitação.',
+                      ),
+                    ),
+                  );
+                } finally {
+                  if (mounted) {
+                    setState(() {
+                      _carregando = false;
+                    });
+                  }
+                }
+              },
         child: Text(
           'Esqueci minha senha',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
