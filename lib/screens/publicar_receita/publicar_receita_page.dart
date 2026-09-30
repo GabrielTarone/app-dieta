@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../models/recipe.dart';
+import '../../services/supabase/supabase_storage_service.dart';
 
 class PublicarReceitaPage extends StatefulWidget {
   final String categoria;
@@ -314,15 +315,14 @@ class _PublicarReceitaPageState
     );
 
     final receita = Recipe(
+      id: widget.receitaParaEditar?.id,
+      userId: widget.receitaParaEditar?.userId,
       title: _nomeController.text.trim(),
       category: widget.categoria,
 
       imagePath:
           widget.receitaParaEditar?.imagePath,
-
-      imageBytes:
-          _imagemBytes ??
-          widget.receitaParaEditar?.imageBytes,
+      imageBytes: _imagemBytes,
 
       time: '$tempo min',
       timeMinutes: tempo,
@@ -383,21 +383,59 @@ class _PublicarReceitaPageState
     );
   }
 
-  Widget _buildImagemReceita(
-    BuildContext context,
-  ) {
-    final receitaAntiga =
-        widget.receitaParaEditar;
+  Widget _buildImagemReceita(BuildContext context) {
+    final receitaAntiga = widget.receitaParaEditar;
 
-    final temImagemNova =
-        _imagemBytes != null;
+    final temImagemNova = _imagemBytes != null;
+
+    final caminhoAntigo = receitaAntiga?.imagePath;
 
     final temImagemAntiga =
-        receitaAntiga?.imagePath != null;
+        caminhoAntigo != null && caminhoAntigo.isNotEmpty;
+
+    Widget imagem;
+
+    if (temImagemNova) {
+      // Foto recém-selecionada na galeria.
+      imagem = Image.memory(
+        _imagemBytes!,
+        fit: BoxFit.cover,
+      );
+    } else if (temImagemAntiga) {
+      if (caminhoAntigo.startsWith('assets/')) {
+        // Imagem demonstrativa.
+        imagem = Image.asset(
+          caminhoAntigo,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildAdicionarFoto(context);
+          },
+        );
+      } else {
+        // Foto já armazenada no Supabase.
+        final url = SupabaseStorageService()
+            .obterUrlPublica(caminhoAntigo);
+
+        imagem = Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return _buildAdicionarFoto(context);
+          },
+        );
+      }
+    } else if (receitaAntiga?.imageBytes != null) {
+      // Foto temporária ainda disponível na memória.
+      imagem = Image.memory(
+        receitaAntiga!.imageBytes!,
+        fit: BoxFit.cover,
+      );
+    } else {
+      imagem = _buildAdicionarFoto(context);
+    }
 
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildLabel(
           context,
@@ -414,11 +452,8 @@ class _PublicarReceitaPageState
             width: double.infinity,
             height: 190,
             decoration: BoxDecoration(
-              color: Theme.of(context)
-                  .colorScheme
-                  .surface,
-              borderRadius:
-                  BorderRadius.circular(16),
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: Theme.of(context)
                     .colorScheme
@@ -426,51 +461,24 @@ class _PublicarReceitaPageState
               ),
             ),
             clipBehavior: Clip.antiAlias,
-            child: temImagemNova
-                ? Image.memory(
-                    _imagemBytes!,
-                    fit: BoxFit.cover,
-                  )
-                : temImagemAntiga
-                    ? Image.asset(
-                        receitaAntiga!
-                            .imagePath!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (
-                          context,
-                          error,
-                          stackTrace,
-                        ) {
-                          return _buildAdicionarFoto(
-                            context,
-                          );
-                        },
-                      )
-                    : _buildAdicionarFoto(
-                        context,
-                      ),
+            child: imagem,
           ),
         ),
 
-        if (temImagemNova ||
-            temImagemAntiga) ...[
+        if (temImagemNova || temImagemAntiga) ...[
           const SizedBox(
             height: AppTheme.spacingSm,
           ),
 
           Center(
             child: TextButton.icon(
-              onPressed:
-                  _selecionarImagem,
+              onPressed: _selecionarImagem,
               icon: const Icon(
                 Icons.photo_library_outlined,
               ),
-              label: const Text(
-                'Trocar foto',
-              ),
+              label: const Text('Trocar foto'),
               style: TextButton.styleFrom(
-                foregroundColor:
-                    AppTheme.verdePrincipal,
+                foregroundColor: AppTheme.verdePrincipal,
               ),
             ),
           ),

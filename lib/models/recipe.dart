@@ -1,6 +1,9 @@
 import 'dart:typed_data';
 
 class Recipe {
+  final String? id;
+  final String? userId;
+
   final String title;
   final String category;
 
@@ -17,6 +20,8 @@ class Recipe {
   final List<String> preparation;
 
   const Recipe({
+    this.id,
+    this.userId,
     required this.title,
     required this.category,
     this.imagePath,

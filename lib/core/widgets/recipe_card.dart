@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import '../../models/recipe.dart';
+import '../../services/supabase/supabase_storage_service.dart';
 
 class RecipeCard extends StatelessWidget {
   final Recipe recipe;
@@ -216,47 +217,67 @@ class RecipeCard extends StatelessWidget {
   }
 
   Widget _buildRecipeImage() {
-    // Foto escolhida pelo usuário.
+    Widget imagem;
+
+    // 1. Foto temporária armazenada na memória.
     if (recipe.imageBytes != null) {
-      return ClipRRect(
-        borderRadius:
-            BorderRadius.circular(14),
-        child: Image.memory(
-          recipe.imageBytes!,
-          width: 110,
-          height: 100,
-          fit: BoxFit.cover,
+      imagem = Image.memory(
+        recipe.imageBytes!,
+        width: 110,
+        height: 100,
+        fit: BoxFit.cover,
+      );
+    }
+
+    // 2. Receita sem imagem.
+    else if (recipe.imagePath == null ||
+        recipe.imagePath!.isEmpty) {
+      imagem = const Center(
+        child: Icon(
+          Icons.restaurant,
+          color: AppTheme.verdePrincipal,
+          size: 36,
         ),
       );
     }
 
-    // Imagem original que está nos assets.
-    if (recipe.imagePath != null) {
-      return ClipRRect(
-        borderRadius:
-            BorderRadius.circular(14),
-        child: Image.asset(
-          recipe.imagePath!,
-          width: 110,
-          height: 100,
-          fit: BoxFit.cover,
-        ),
+    // 3. Imagem demonstrativa do aplicativo.
+    else if (recipe.imagePath!.startsWith('assets/')) {
+      imagem = Image.asset(
+        recipe.imagePath!,
+        width: 110,
+        height: 100,
+        fit: BoxFit.cover,
       );
     }
 
-    // Receita sem nenhuma imagem.
-    return Container(
-      width: 110,
-      height: 100,
-      decoration: BoxDecoration(
-        color: AppTheme.verdeClaro,
-        borderRadius:
-            BorderRadius.circular(14),
-      ),
-      child: const Icon(
-        Icons.restaurant,
-        color: AppTheme.verdePrincipal,
-        size: 36,
+    // 4. Imagem armazenada no Supabase Storage.
+    else {
+      final url = SupabaseStorageService()
+          .obterUrlPublica(recipe.imagePath!);
+
+      imagem = Image.network(
+        url,
+        width: 110,
+        height: 100,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Icon(
+              Icons.broken_image_outlined,
+              size: 36,
+            ),
+          );
+        },
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: SizedBox(
+        width: 110,
+        height: 100,
+        child: imagem,
       ),
     );
   }

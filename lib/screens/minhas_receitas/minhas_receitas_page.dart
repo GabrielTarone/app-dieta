@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/recipe_card.dart';
 import '../../models/recipe.dart';
 import '../detalhes_receita/detalhes_receita_page.dart';
 import '../publicar_receita/escolher_categoria_page.dart';
+import '../../services/supabase/supabase_recipe_service.dart';
+import '../../services/supabase/supabase_storage_service.dart';
+
 
 class MinhasReceitasPage extends StatefulWidget {
   final List<Recipe> favoritos;
@@ -12,9 +16,9 @@ class MinhasReceitasPage extends StatefulWidget {
 
   final List<Recipe> minhasReceitas;
   final void Function(Recipe) onAdicionarMinhaReceita;
-  final void Function(Recipe) onRemoverMinhaReceita;
+  final Future<void> Function(Recipe) onRemoverMinhaReceita;
 
-  final void Function(
+  final Future<void> Function(
     Recipe receitaAntiga,
     Recipe receitaEditada,
   ) onEditarMinhaReceita;
@@ -36,6 +40,9 @@ class MinhasReceitasPage extends StatefulWidget {
 
 class _MinhasReceitasPageState
     extends State<MinhasReceitasPage> {
+  final _recipeService = SupabaseRecipeService();
+  final _storageService = SupabaseStorageService();
+
   Future<void> _novaReceita() async {
     final novaReceita = await Navigator.push<Recipe>(
       context,
@@ -45,22 +52,112 @@ class _MinhasReceitasPageState
       ),
     );
 
-    if (novaReceita != null) {
-      widget.onAdicionarMinhaReceita(
-        novaReceita,
+    if (!mounted || novaReceita == null) return;
+
+    String? caminhoImagemEnviada;
+
+    try {
+      // Inicialmente mantém o caminho da receita.
+      String? caminhoImagem = novaReceita.imagePath;
+
+      // Se o usuário escolheu uma foto,
+      // envia os bytes para o Supabase Storage.
+      if (novaReceita.imageBytes != null) {
+        final bytes = novaReceita.imageBytes!;
+
+        final extensao =
+            _storageService.identificarExtensao(bytes);
+
+        caminhoImagemEnviada =
+            await _storageService.enviarImagem(
+          bytes,
+          extensao: extensao,
+        );
+
+        caminhoImagem = caminhoImagemEnviada;
+      }
+
+      // Cria a receita com a referência da imagem.
+      final receitaParaSalvar = Recipe(
+        title: novaReceita.title,
+        category: novaReceita.category,
+        imagePath: caminhoImagem,
+        imageBytes: novaReceita.imageBytes,
+        time: novaReceita.time,
+        timeMinutes: novaReceita.timeMinutes,
+        difficulty: novaReceita.difficulty,
+        calories: novaReceita.calories,
+        caloriesValue: novaReceita.caloriesValue,
+        diets: novaReceita.diets,
+        ingredients: novaReceita.ingredients,
+        preparation: novaReceita.preparation,
       );
 
-      if (mounted) {
-        setState(() {});
+      // Salva os dados no PostgreSQL.
+      await _recipeService.criarReceita(
+        receitaParaSalvar,
+      );
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Receita publicada com sucesso!',
-            ),
-          ),
+      // Cadastro concluído: a imagem agora pertence
+      // à receita e não deve ser removida.
+      caminhoImagemEnviada = null;
+
+      // Recupera as receitas com seus IDs.
+      final receitasSalvas =
+          await _recipeService.listarReceitas();
+
+      if (!mounted) return;
+
+      final usuarioId =
+          Supabase.instance.client.auth.currentUser?.id;
+
+      final minhasReceitasSalvas = receitasSalvas
+          .where(
+            (receita) => receita.userId == usuarioId,
+          )
+          .toList();
+
+      for (final receita in minhasReceitasSalvas) {
+        final jaExiste = widget.minhasReceitas.any(
+          (item) => item.id == receita.id,
         );
+
+        if (!jaExiste) {
+          widget.onAdicionarMinhaReceita(receita);
+        }
       }
+
+      setState(() {});
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Receita e imagem publicadas com sucesso!',
+          ),
+        ),
+      );
+    } catch (e) {
+      // Se o upload funcionou, mas o cadastro falhou,
+      // tenta remover a imagem que ficou sem receita.
+      if (caminhoImagemEnviada != null) {
+        try {
+          await _storageService.excluirImagem(
+            caminhoImagemEnviada,
+          );
+        } catch (_) {
+          // A limpeza pode ser tentada novamente depois.
+        }
+      }
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Erro ao publicar receita: $e',
+          ),
+        ),
+      );
     }
   }
 
@@ -84,10 +181,8 @@ class _MinhasReceitasPageState
 
           podeEditar: true,
 
-          onEditarReceita: (
-            receitaEditada,
-          ) {
-            widget.onEditarMinhaReceita(
+          onEditarReceita: (receitaEditada) async {
+            await widget.onEditarMinhaReceita(
               recipe,
               receitaEditada,
             );
@@ -148,17 +243,27 @@ class _MinhasReceitasPageState
     );
 
     if (confirmar == true) {
-      widget.onRemoverMinhaReceita(
-        recipe,
-      );
+      try {
+        await widget.onRemoverMinhaReceita(recipe);
 
-      if (mounted) {
+        if (!mounted) return;
+
         setState(() {});
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
               'Receita excluída com sucesso!',
+            ),
+          ),
+        );
+      } catch (e) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Erro ao excluir receita: $e',
             ),
           ),
         );

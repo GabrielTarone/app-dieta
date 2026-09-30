@@ -4,6 +4,8 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/recipe.dart';
 import '../publicar_receita/publicar_receita_page.dart';
+import '../../services/supabase/supabase_storage_service.dart';
+import '../../services/supabase/supabase_recipe_service.dart';
 
 class DetalhesReceitaPage extends StatefulWidget {
   final Recipe recipe;
@@ -11,7 +13,7 @@ class DetalhesReceitaPage extends StatefulWidget {
   final VoidCallback onFavoriteTap;
 
   final bool podeEditar;
-  final void Function(Recipe)? onEditarReceita;
+  final Future<void> Function(Recipe)? onEditarReceita;
 
   const DetalhesReceitaPage({
     super.key,
@@ -51,24 +53,48 @@ class _DetalhesReceitaPageState
       ),
     );
 
-    if (receitaEditada != null) {
-      widget.onEditarReceita?.call(
-        receitaEditada,
+    if (!mounted || receitaEditada == null) return;
+
+    try {
+      final salvar = widget.onEditarReceita;
+
+      if (salvar == null) {
+        throw Exception('Não foi possível acessar a edição.');
+      }
+
+      // Salva a edição no Supabase.
+      await salvar(receitaEditada);
+
+      // Busca a receita com o caminho atualizado da foto.
+      final receitasAtualizadas =
+          await SupabaseRecipeService().listarReceitas();
+
+      final receitaAtualizada = receitasAtualizadas.firstWhere(
+        (receita) => receita.id == _recipe.id,
+        orElse: () => throw Exception(
+          'Não foi possível localizar a receita atualizada.',
+        ),
       );
 
-      if (mounted) {
-        setState(() {
-          _recipe = receitaEditada;
-        });
+      if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Receita atualizada com sucesso!',
-            ),
-          ),
-        );
-      }
+      setState(() {
+        _recipe = receitaAtualizada;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Receita atualizada com sucesso!'),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao atualizar receita: $e'),
+        ),
+      );
     }
   }
 
@@ -217,44 +243,68 @@ ${_recipe.preparation.asMap().entries.map(
   }
 
   Widget _buildRecipeImage() {
-    // Foto escolhida pelo usuário.
+    Widget imagem;
+
+    // 1. Imagem temporária da galeria.
     if (_recipe.imageBytes != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Image.memory(
-          _recipe.imageBytes!,
-          width: double.infinity,
-          height: 220,
-          fit: BoxFit.cover,
+      imagem = Image.memory(
+        _recipe.imageBytes!,
+        width: double.infinity,
+        height: 220,
+        fit: BoxFit.cover,
+      );
+    }
+
+    // 2. Receita sem imagem.
+    else if (_recipe.imagePath == null ||
+        _recipe.imagePath!.isEmpty) {
+      imagem = const Center(
+        child: Icon(
+          Icons.restaurant,
+          size: 70,
+          color: AppTheme.verdePrincipal,
         ),
       );
     }
 
-    // Imagem original das receitas do app.
-    if (_recipe.imagePath != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Image.asset(
-          _recipe.imagePath!,
-          width: double.infinity,
-          height: 220,
-          fit: BoxFit.cover,
-        ),
+    // 3. Imagem demonstrativa dos assets.
+    else if (_recipe.imagePath!.startsWith('assets/')) {
+      imagem = Image.asset(
+        _recipe.imagePath!,
+        width: double.infinity,
+        height: 220,
+        fit: BoxFit.cover,
       );
     }
 
-    // Receita sem imagem.
-    return Container(
-      width: double.infinity,
-      height: 220,
-      decoration: BoxDecoration(
+    // 4. Imagem armazenada no Supabase Storage.
+    else {
+      final url = SupabaseStorageService()
+          .obterUrlPublica(_recipe.imagePath!);
+
+      imagem = Image.network(
+        url,
+        width: double.infinity,
+        height: 220,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Icon(
+              Icons.broken_image_outlined,
+              size: 60,
+            ),
+          );
+        },
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        width: double.infinity,
+        height: 220,
         color: AppTheme.verdeClaro,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const Icon(
-        Icons.restaurant,
-        size: 70,
-        color: AppTheme.verdePrincipal,
+        child: imagem,
       ),
     );
   }

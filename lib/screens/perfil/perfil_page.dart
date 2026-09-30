@@ -8,6 +8,7 @@ import '../minhas_receitas/minhas_receitas_page.dart';
 import '../notificacoes/notificacoes_page.dart';
 import '../ajuda_suporte/ajuda_suporte_page.dart';
 import '../favoritos/favoritos_page.dart';
+import '../../services/supabase/supabase_auth_service.dart';
 
 class PerfilPage extends StatelessWidget {
   final List<Recipe> favoritos;
@@ -15,9 +16,9 @@ class PerfilPage extends StatelessWidget {
 
   final List<Recipe> minhasReceitas;
   final void Function(Recipe) onAdicionarMinhaReceita;
-  final void Function(Recipe) onRemoverMinhaReceita;
+  final Future<void> Function(Recipe) onRemoverMinhaReceita;
 
-  final void Function(
+  final Future<void> Function(
     Recipe receitaAntiga,
     Recipe receitaEditada,
   ) onEditarMinhaReceita;
@@ -317,15 +318,30 @@ class PerfilPage extends StatelessWidget {
           icon: Icons.logout,
           title: 'Sair',
           showArrow: false,
-          onTap: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    const LoginPage(),
-              ),
-              (route) => false,
-            );
+          onTap: () async {
+            try {
+              await SupabaseAuthService().sair();
+
+              if (!context.mounted) return;
+
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const LoginPage(),
+                ),
+                (route) => false,
+              );
+            } catch (e) {
+              if (!context.mounted) return;
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Não foi possível sair. Tente novamente.',
+                  ),
+                ),
+              );
+            }
           },
         ),
       ],

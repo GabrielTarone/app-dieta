@@ -7,6 +7,9 @@ import '../home/home_page.dart';
 import '../receitas/receitas_page.dart';
 import '../favoritos/favoritos_page.dart';
 import '../perfil/perfil_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/supabase/supabase_recipe_service.dart';
+import '../../services/supabase/supabase_storage_service.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({
@@ -21,6 +24,10 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
+  final _recipeService = SupabaseRecipeService();
+
+  bool _carregandoReceitas = true;
+
   String _categoriaSelecionada = 'Todos';
 
   final List<Recipe> _favoritos = [];
@@ -33,16 +40,57 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
 
-    // Criamos uma cópia da lista original.
-    // Essa será a lista principal usada pelo app.
-    _todasReceitas = List<Recipe>.from(
-      receitas,
-    );
+    // Receitas demonstrativas do aplicativo.
+    _todasReceitas = List<Recipe>.from(receitas);
 
-    // Por enquanto, as 3 primeiras receitas
-    // representam as receitas publicadas pelo Ricardo.
-    _minhasReceitas =
-        _todasReceitas.take(3).toList();
+    // Será preenchida com as receitas do usuário.
+    _minhasReceitas = [];
+
+    _carregarReceitas();
+  }
+
+  Future<void> _carregarReceitas() async {
+    try {
+      final receitasSupabase =
+          await _recipeService.listarReceitas();
+
+      final usuarioId =
+          Supabase.instance.client.auth.currentUser?.id;
+
+      if (!mounted) return;
+
+      setState(() {
+        // Mantém as receitas demonstrativas
+        // e adiciona as receitas do banco.
+        _todasReceitas = [
+          ...receitas,
+          ...receitasSupabase,
+        ];
+
+        // Somente receitas publicadas pelo usuário.
+        _minhasReceitas = receitasSupabase
+            .where(
+              (receita) => receita.userId == usuarioId,
+            )
+            .toList();
+
+        _carregandoReceitas = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _carregandoReceitas = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Não foi possível carregar as receitas: $e',
+          ),
+        ),
+      );
+    }
   }
 
   void _toggleFavorito(Recipe recipe) {
@@ -68,61 +116,171 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  void _removerMinhaReceita(
+  Future<void> _removerMinhaReceita(
     Recipe recipe,
-  ) {
-    setState(() {
-      // Remove de Minhas receitas.
-      _minhasReceitas.remove(recipe);
+  ) async {
+    final id = recipe.id;
 
-      // Remove da lista geral.
-      _todasReceitas.remove(recipe);
+    if (id == null) {
+      throw Exception(
+        'Esta receita não possui um ID válido.',
+      );
+    }
 
-      // Se estiver favoritada,
-      // também remove dos favoritos.
-      _favoritos.remove(recipe);
-    });
+    // Guarda o caminho da foto antes de excluir.
+    final caminhoImagem = recipe.imagePath;
+
+    // Primeiro exclui a receita do Supabase.
+    await _recipeService.excluirReceita(id);
+
+    // Atualiza as listas locais após a confirmação.
+    if (mounted) {
+      setState(() {
+        _minhasReceitas.removeWhere(
+          (item) => item.id == id,
+        );
+
+        _todasReceitas.removeWhere(
+          (item) => item.id == id,
+        );
+
+        _favoritos.removeWhere(
+          (item) => item.id == id,
+        );
+      });
+    }
+
+    // Depois tenta excluir a foto do Storage.
+    if (caminhoImagem != null &&
+        caminhoImagem.isNotEmpty &&
+        !caminhoImagem.startsWith('assets/')) {
+      try {
+        await SupabaseStorageService().excluirImagem(
+          caminhoImagem,
+        );
+      } catch (e) {
+        // A receita já foi excluída do banco.
+        // Falha na limpeza da foto não desfaz a exclusão.
+        debugPrint(
+          'Receita excluída, mas não foi possível remover a foto: $e',
+        );
+      }
+    }
   }
 
-  void _editarMinhaReceita(
+  Future<void> _editarMinhaReceita(
     Recipe receitaAntiga,
     Recipe receitaEditada,
-  ) {
-    setState(() {
-      // Atualiza em Minhas receitas.
-      final indexMinhasReceitas =
-          _minhasReceitas.indexOf(
-        receitaAntiga,
-      );
+  ) async {
+    final id = receitaAntiga.id;
 
-      if (indexMinhasReceitas != -1) {
-        _minhasReceitas[
-            indexMinhasReceitas] = receitaEditada;
+    if (id == null) {
+      throw Exception('Esta receita não possui um ID válido.');
+    }
+
+    final storageService = SupabaseStorageService();
+
+    String? novaImagemPath;
+
+    try {
+      // Mantém a imagem antiga por padrão.
+      String? caminhoImagem = receitaAntiga.imagePath;
+
+      // Só envia uma foto quando o usuário escolheu outra.
+      if (receitaEditada.imageBytes != null) {
+        final extensao = storageService.identificarExtensao(
+          receitaEditada.imageBytes!,
+        );
+
+        novaImagemPath = await storageService.enviarImagem(
+          receitaEditada.imageBytes!,
+          extensao: extensao,
+        );
+
+        caminhoImagem = novaImagemPath;
       }
 
-      // Atualiza na lista geral.
-      final indexTodasReceitas =
-          _todasReceitas.indexOf(
-        receitaAntiga,
+      // Monta a receita com o caminho definitivo da foto.
+      final receitaAtualizada = Recipe(
+        id: id,
+        userId: receitaAntiga.userId,
+        title: receitaEditada.title,
+        category: receitaEditada.category,
+        imagePath: caminhoImagem,
+        imageBytes: null,
+        time: receitaEditada.time,
+        timeMinutes: receitaEditada.timeMinutes,
+        difficulty: receitaEditada.difficulty,
+        calories: receitaEditada.calories,
+        caloriesValue: receitaEditada.caloriesValue,
+        diets: receitaEditada.diets,
+        ingredients: receitaEditada.ingredients,
+        preparation: receitaEditada.preparation,
       );
 
-      if (indexTodasReceitas != -1) {
-        _todasReceitas[
-            indexTodasReceitas] = receitaEditada;
-      }
-
-      // Se estiver nos favoritos,
-      // também troca pela versão editada.
-      final indexFavorito =
-          _favoritos.indexOf(
-        receitaAntiga,
+      // Atualiza o banco somente após o upload.
+      await _recipeService.atualizarReceita(
+        id,
+        receitaAtualizada,
       );
 
-      if (indexFavorito != -1) {
-        _favoritos[indexFavorito] =
-            receitaEditada;
+      if (mounted) {
+        setState(() {
+          final indexMinhasReceitas =
+              _minhasReceitas.indexOf(receitaAntiga);
+
+          if (indexMinhasReceitas != -1) {
+            _minhasReceitas[indexMinhasReceitas] =
+                receitaAtualizada;
+          }
+
+          final indexTodasReceitas =
+              _todasReceitas.indexOf(receitaAntiga);
+
+          if (indexTodasReceitas != -1) {
+            _todasReceitas[indexTodasReceitas] =
+                receitaAtualizada;
+          }
+
+          final indexFavorito =
+              _favoritos.indexOf(receitaAntiga);
+
+          if (indexFavorito != -1) {
+            _favoritos[indexFavorito] =
+                receitaAtualizada;
+          }
+        });
       }
-    });
+
+      // Só tenta remover a foto antiga depois
+      // de confirmar a atualização do banco.
+      final imagemAntiga = receitaAntiga.imagePath;
+
+      if (novaImagemPath != null &&
+          imagemAntiga != null &&
+          imagemAntiga != novaImagemPath &&
+          !imagemAntiga.startsWith('assets/')) {
+        try {
+          await storageService.excluirImagem(imagemAntiga);
+        } catch (e) {
+          debugPrint('Não foi possível remover a foto antiga: $e');
+        }
+      }
+    } catch (e) {
+      // Se a atualização falhar, remove a nova imagem
+      // que foi enviada, evitando arquivo sem uso.
+      if (novaImagemPath != null) {
+        try {
+          await storageService.excluirImagem(novaImagemPath);
+        } catch (erroLimpeza) {
+          debugPrint(
+            'Não foi possível limpar a nova imagem: $erroLimpeza',
+          );
+        }
+      }
+
+      rethrow;
+    }
   }
 
   @override
@@ -182,7 +340,11 @@ class _MainScreenState extends State<MainScreen> {
     ];
 
     return Scaffold(
-      body: screens[_currentIndex],
+      body: _carregandoReceitas
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : screens[_currentIndex],
 
       bottomNavigationBar:
           BottomNavigationBar(
