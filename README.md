@@ -48,8 +48,8 @@ O NutriGo encontra-se em desenvolvimento como aplicativo **Flutter/Dart**, com i
 
 O projeto já possui as seguintes funcionalidades implementadas:
 
-- **Autenticação:** cadastro, login, recuperação de senha por e-mail e gerenciamento de sessão por meio do Supabase Auth.
-- **Perfis:** armazenamento das informações dos usuários no PostgreSQL.
+- **Autenticação:** cadastro, login, recuperação e alteração de senha, além do gerenciamento de sessão por meio do Supabase Auth.
+- **Perfis:** carregamento e edição das informações do usuário, com persistência dos dados no PostgreSQL.
 - **Receitas:** cadastro, consulta, edição e exclusão de receitas, com persistência no Supabase.
 - **Imagens:** envio, substituição e exclusão de fotografias utilizando Supabase Storage.
 - **Favoritos:** adição e remoção de receitas favoritas, com persistência por usuário no banco de dados.
@@ -83,7 +83,13 @@ O projeto continua em evolução, com melhorias e funcionalidades adicionais pre
 - Armazenamento do perfil do usuário;
 - Identificação do usuário autenticado;
 - Exibição dinâmica do nome do usuário na Home;
-- Estrutura preparada para gerenciamento de sessão.
+- Estrutura preparada para gerenciamento de sessão;
+- Exibição dinâmica do nome e e-mail do usuário na tela de Perfil;
+- Edição do nome do usuário pela tela de Configurações;
+- Persistência das alterações do perfil no Supabase PostgreSQL;
+- Atualização automática dos dados exibidos no Perfil após a edição;
+- Alteração de senha pelo usuário autenticado na tela de Configurações;
+- Validação da nova senha e confirmação antes da atualização;
 
 ## 🍳 Receitas
 
@@ -455,6 +461,7 @@ lib/
 │   ├── main/
 │   ├── perfil/
 │   ├── receitas/
+│   ├── redefinir_senha/
 │   └── ...
 │
 ├── services/
@@ -791,13 +798,15 @@ O aplicativo também poderá estabelecer parcerias com:
 
 # 🔄 Próximas etapas
 
-O NutriGo já possui autenticação, gerenciamento de receitas, armazenamento de imagens e favoritos persistentes integrados ao Supabase.
+O NutriGo já possui autenticação, recuperação e alteração de senha, gerenciamento de perfil, gerenciamento de receitas, armazenamento de imagens e favoritos persistentes integrados ao Supabase.
 
 As próximas etapas do desenvolvimento incluem:
 
-### 👤 Usuários e autenticação
+### 👤 Usuários e perfil
 
-- Evoluir as funcionalidades do perfil do usuário;
+- Expandir as funcionalidades do perfil do usuário;
+- Implementar preferências alimentares;
+- Evoluir as configurações de notificações;
 - Aprimorar o gerenciamento de sessão;
 - Melhorar as mensagens de validação e tratamento de erros.
 
@@ -809,9 +818,16 @@ As próximas etapas do desenvolvimento incluem:
 - Aprimorar o tratamento de falhas de conexão;
 - Refinar a responsividade das interfaces.
 
+### 🔒 Configurações e privacidade
+
+- Implementar as opções de privacidade;
+- Adicionar os Termos de Uso;
+- Adicionar a Política de Privacidade;
+- Expandir as opções disponíveis na tela de Configurações.
+
 ### 🧪 Testes e validação
 
-- Realizar testes completos dos fluxos de cadastro e login;
+- Realizar testes completos dos principais fluxos de autenticação;
 - Validar as operações de receitas com diferentes usuários;
 - Testar as políticas de segurança do Supabase;
 - Validar o comportamento do aplicativo em diferentes dispositivos;
