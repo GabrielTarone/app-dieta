@@ -44,13 +44,24 @@ O aplicativo é destinado principalmente a:
 
 # 🚀 Status atual do projeto
 
-O NutriGo encontra-se em desenvolvimento como aplicativo **Flutter/Dart**.
+O NutriGo encontra-se em desenvolvimento como aplicativo **Flutter/Dart**, com integração ao **Supabase** para autenticação, gerenciamento de usuários, persistência de receitas, armazenamento de imagens e favoritos.
 
-O projeto já possui um protótipo funcional com navegação entre as principais telas, gerenciamento de receitas e favoritos, publicação de receitas e integração inicial com banco de dados em nuvem por meio do **Supabase**.
+O projeto já possui as seguintes funcionalidades implementadas:
 
-Atualmente, a autenticação e os perfis dos usuários já utilizam o Supabase.
+- **Autenticação:** cadastro, login e gerenciamento de sessão por meio do Supabase Auth.
+- **Perfis:** armazenamento das informações dos usuários no PostgreSQL.
+- **Receitas:** cadastro, consulta, edição e exclusão de receitas, com persistência no Supabase.
+- **Imagens:** envio, substituição e exclusão de fotografias utilizando Supabase Storage.
+- **Favoritos:** adição e remoção de receitas favoritas, com persistência por usuário no banco de dados.
+- **Segurança:** utilização de políticas Row Level Security (RLS) para controlar o acesso aos dados e arquivos.
+- **Navegação:** integração entre Home, Explorar Receitas, Favoritos, Perfil e telas de gerenciamento de receitas.
 
-A persistência das receitas em banco de dados será integrada progressivamente ao projeto. As receitas atualmente existentes no aplicativo continuam sendo gerenciadas pela aplicação enquanto essa integração é desenvolvida.
+O aplicativo combina receitas demonstrativas com receitas cadastradas no banco de dados.
+
+As funcionalidades de persistência de receitas, gerenciamento de imagens e favoritos foram implementadas e testadas.
+
+O projeto continua em evolução, com melhorias e funcionalidades adicionais previstas para as próximas etapas.
+
 
 ---
 
@@ -69,24 +80,57 @@ A persistência das receitas em banco de dados será integrada progressivamente 
 
 ## 🍳 Receitas
 
-- Visualização de receitas;
-- Tela de detalhes da receita;
+O NutriGo permite consultar e gerenciar receitas, utilizando o **Supabase PostgreSQL** para armazenar as receitas publicadas.
+
+Funcionalidades implementadas:
+
+- Visualização de receitas demonstrativas e receitas cadastradas no Supabase;
+- Tela de detalhes das receitas;
 - Busca por nome e categoria;
 - Filtros por categorias;
 - Publicação de novas receitas;
-- Adição de ingredientes;
-- Adição do modo de preparo;
-- Informações de tempo e calorias;
-- Seleção de imagem da galeria;
-- Visualização das receitas cadastradas pelo usuário;
-- Edição e remoção de receitas criadas pelo usuário.
+- Cadastro de ingredientes e modo de preparo;
+- Informações de tempo, dificuldade, calorias e categorias alimentares;
+- Visualização das receitas publicadas pelo próprio usuário;
+- Edição de receitas existentes;
+- Exclusão de receitas publicadas pelo usuário;
+- Persistência das receitas na tabela `recipes`;
+- Associação das receitas aos usuários autenticados por meio de identificadores UUID.
+
+### 📷 Imagens das receitas
+
+As imagens são gerenciadas utilizando o **Supabase Storage**, no bucket `receitas`.
+
+O aplicativo permite:
+
+- Selecionar imagens da galeria;
+- Enviar imagens JPG, PNG e WebP, com limite de 5 MB;
+- Armazenar as imagens em pastas associadas ao usuário autenticado;
+- Exibir as imagens armazenadas no Supabase;
+- Substituir imagens durante a edição de receitas;
+- Excluir imagens vinculadas a receitas removidas;
+- Remover imagens antigas após a substituição, evitando arquivos desnecessários.
+
+As operações de armazenamento utilizam políticas de segurança para restringir as alterações aos arquivos pertencentes ao usuário autenticado.
 
 ## ❤️ Favoritos
 
+O NutriGo possui um sistema de favoritos com **persistência no Supabase**, permitindo que cada usuário mantenha suas receitas favoritas mesmo após fechar e abrir novamente o aplicativo.
+
+Funcionalidades implementadas:
+
 - Adicionar receitas aos favoritos;
 - Remover receitas dos favoritos;
-- Sincronização do estado de favoritos entre as telas;
-- Tela dedicada às receitas favoritas.
+- Salvar favoritos na tabela `favorites`;
+- Associar favoritos ao usuário autenticado;
+- Recuperar automaticamente os favoritos ao carregar o aplicativo;
+- Favoritar receitas demonstrativas e receitas cadastradas no Supabase;
+- Sincronizar a exibição dos favoritos entre Home, Explorar, Favoritos e Perfil;
+- Exibir receitas favoritas em uma tela dedicada.
+
+A tabela `favorites` utiliza `recipe_id` para receitas persistidas no banco e `demo_recipe_key` para identificar receitas demonstrativas.
+
+As políticas RLS restringem a consulta, a inclusão e a remoção dos registros de favoritos ao usuário correspondente.
 
 ## 🧭 Navegação
 
@@ -124,7 +168,7 @@ O desenvolvimento é realizado utilizando o **Visual Studio Code**.
 
 O projeto utiliza o **Supabase** como solução de backend em nuvem.
 
-Atualmente, a integração contempla autenticação e gerenciamento dos perfis dos usuários.
+Atualmente, a integração contempla autenticação, gerenciamento de perfis, persistência de receitas e favoritos no PostgreSQL, além do armazenamento de imagens no Supabase Storage.
 
 ## Autenticação
 
@@ -181,6 +225,129 @@ Dessa forma, os dados de cada perfil são associados ao usuário autenticado.
 
 ---
 
+## 🍳 Tabela `recipes`
+
+A tabela `recipes` armazena as receitas publicadas pelos usuários do NutriGo.
+
+Cada receita possui um identificador único (`UUID`) e está associada ao usuário responsável pela publicação.
+
+Entre os dados armazenados estão:
+
+- Identificador da receita (`id`);
+- Identificador do usuário (`user_id`);
+- Nome da receita;
+- Categoria;
+- Tempo de preparo;
+- Dificuldade;
+- Calorias;
+- Ingredientes;
+- Modo de preparo;
+- Categorias alimentares;
+- Caminho da imagem armazenada no Supabase Storage.
+
+### Operações implementadas
+
+O aplicativo realiza as operações CRUD:
+
+- **CREATE:** publicação de novas receitas;
+- **READ:** consulta das receitas cadastradas;
+- **UPDATE:** edição das receitas pertencentes ao usuário;
+- **DELETE:** exclusão das receitas pertencentes ao usuário.
+
+A aplicação utiliza o serviço `SupabaseRecipeService` para realizar essas operações.
+
+### Segurança das receitas
+
+As políticas de Row Level Security (RLS) permitem a consulta de receitas conforme as regras configuradas e restringem as operações de criação, edição e exclusão aos usuários autorizados.
+
+---
+
+## ❤️ Tabela `favorites`
+
+A tabela `favorites` armazena os favoritos de cada usuário autenticado.
+
+Estrutura principal:
+
+```text
+favorites
+├── id
+├── user_id
+├── recipe_id
+├── demo_recipe_key
+└── created_at
+```
+
+Os campos possuem as seguintes responsabilidades:
+
+- `id`: identificador único do favorito;
+- `user_id`: identifica o usuário responsável;
+- `recipe_id`: identifica uma receita cadastrada no Supabase;
+- `demo_recipe_key`: identifica uma receita demonstrativa;
+- `created_at`: registra a data de criação do favorito.
+
+Uma restrição garante que cada registro utilize `recipe_id` ou `demo_recipe_key`, mas não ambos.
+
+Também existem restrições para evitar que o mesmo usuário cadastre o mesmo favorito mais de uma vez.
+
+### Segurança dos favoritos
+
+A tabela utiliza políticas RLS para permitir que usuários autenticados:
+
+- Consultem seus próprios favoritos;
+- Adicionem favoritos associados à própria conta;
+- Removam seus próprios favoritos.
+
+O gerenciamento é realizado pelo serviço `SupabaseFavoriteService`.
+
+Os favoritos são recuperados quando o aplicativo carrega as receitas, permitindo sua persistência entre sessões.
+
+---
+
+## 📷 Supabase Storage
+
+O NutriGo utiliza o **Supabase Storage** para armazenar as imagens das receitas.
+
+O bucket utilizado é:
+
+```text
+receitas
+```
+
+Os arquivos são organizados em pastas identificadas pelo UUID do usuário autenticado.
+
+Exemplo ilustrativo:
+
+```text
+receitas/
+└── UUID_DO_USUARIO/
+    ├── imagem_1.jpg
+    └── imagem_2.png
+```
+
+O aplicativo permite:
+
+- Upload de imagens JPG, PNG e WebP;
+- Limite de 5 MB por imagem;
+- Exibição das imagens armazenadas;
+- Substituição de imagens durante a edição;
+- Exclusão das imagens associadas às receitas removidas;
+- Limpeza da imagem anterior após uma substituição bem-sucedida.
+
+### Segurança do armazenamento
+
+O bucket utiliza políticas de acesso para operações de:
+
+- `SELECT`;
+- `INSERT`;
+- `UPDATE`;
+- `DELETE`.
+
+As operações de alteração são restringidas aos arquivos localizados nas pastas pertencentes ao usuário autenticado.
+
+O serviço `SupabaseStorageService` centraliza as operações de armazenamento e exclusão de imagens.
+
+---
+
 # 🧱 Arquitetura
 
 O projeto utiliza uma separação entre **interface**, **regras de acesso aos dados** e **implementações dos serviços**.
@@ -228,7 +395,8 @@ lib/
 │   └── widgets/
 │
 ├── models/
-│   └── recipe.dart
+│   ├── recipe.dart
+│   └── recipe_data.dart
 │
 ├── screens/
 │   ├── cadastro/
@@ -237,7 +405,9 @@ lib/
 │   ├── favoritos/
 │   ├── home/
 │   ├── login/
+│   ├── main/
 │   ├── perfil/
+│   ├── receitas/
 │   └── ...
 │
 ├── services/
@@ -246,7 +416,10 @@ lib/
 │   │
 │   └── supabase/
 │       ├── supabase_auth_service.dart
-│       └── supabase_profile_service.dart
+│       ├── supabase_profile_service.dart
+│       ├── supabase_recipe_service.dart
+│       ├── supabase_storage_service.dart
+│       └── supabase_favorite_service.dart
 │
 ├── env.dart
 └── main.dart
@@ -571,18 +744,40 @@ O aplicativo também poderá estabelecer parcerias com:
 
 # 🔄 Próximas etapas
 
-Entre as próximas evoluções planejadas para o projeto estão:
+O NutriGo já possui autenticação, gerenciamento de receitas, armazenamento de imagens e favoritos persistentes integrados ao Supabase.
 
-- Persistência das receitas no Supabase;
-- Associação das receitas aos usuários;
-- Persistência de favoritos;
-- Armazenamento das imagens das receitas em nuvem;
-- Evolução do perfil do usuário;
-- Recuperação de senha;
-- Aprimoramento da autenticação;
-- Testes do fluxo completo;
-- Preparação da versão final do aplicativo;
-- Geração e validação do APK.
+As próximas etapas do desenvolvimento incluem:
+
+### 👤 Usuários e autenticação
+
+- Evoluir as funcionalidades do perfil do usuário;
+- Implementar recuperação de senha;
+- Aprimorar o gerenciamento de sessão;
+- Melhorar as mensagens de validação e tratamento de erros.
+
+### 🍳 Receitas e experiência do usuário
+
+- Aprimorar a busca e os filtros de receitas;
+- Melhorar a experiência de publicação e edição;
+- Implementar indicadores de carregamento;
+- Aprimorar o tratamento de falhas de conexão;
+- Refinar a responsividade das interfaces.
+
+### 🧪 Testes e validação
+
+- Realizar testes completos dos fluxos de cadastro e login;
+- Validar as operações de receitas com diferentes usuários;
+- Testar as políticas de segurança do Supabase;
+- Validar o comportamento do aplicativo em diferentes dispositivos;
+- Revisar possíveis erros e inconsistências.
+
+### 📱 Preparação da entrega
+
+- Revisar a documentação do projeto;
+- Atualizar as imagens das interfaces;
+- Gerar e validar o APK Android;
+- Realizar os testes finais da aplicação;
+- Preparar a versão final para apresentação acadêmica.
 
 ---
 

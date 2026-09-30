@@ -10,6 +10,7 @@ import '../perfil/perfil_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/supabase/supabase_recipe_service.dart';
 import '../../services/supabase/supabase_storage_service.dart';
+import '../../services/supabase/supabase_favorite_service.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({
@@ -25,6 +26,7 @@ class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
   final _recipeService = SupabaseRecipeService();
+  final _favoriteService = SupabaseFavoriteService();
 
   bool _carregandoReceitas = true;
 
@@ -54,25 +56,58 @@ class _MainScreenState extends State<MainScreen> {
       final receitasSupabase =
           await _recipeService.listarReceitas();
 
+      final favoritosSupabase =
+          await _favoriteService.listarFavoritos();
+
       final usuarioId =
           Supabase.instance.client.auth.currentUser?.id;
+
+      final todasReceitasCarregadas = [
+        ...receitas,
+        ...receitasSupabase,
+      ];
+
+      final favoritosCarregados = <Recipe>[];
+
+      for (final favorito in favoritosSupabase) {
+        final recipeId = favorito['recipe_id'];
+        final demoKey = favorito['demo_recipe_key'];
+
+        if (recipeId != null) {
+          for (final receita in receitasSupabase) {
+            if (receita.id == recipeId) {
+              favoritosCarregados.add(receita);
+              break;
+            }
+          }
+        } else if (demoKey is String &&
+            demoKey.startsWith('demo_')) {
+          final indice = int.tryParse(
+            demoKey.substring(5),
+          );
+
+          if (indice != null &&
+              indice >= 0 &&
+              indice < receitas.length) {
+            favoritosCarregados.add(receitas[indice]);
+          }
+        }
+      }
 
       if (!mounted) return;
 
       setState(() {
-        // Mantém as receitas demonstrativas
-        // e adiciona as receitas do banco.
-        _todasReceitas = [
-          ...receitas,
-          ...receitasSupabase,
-        ];
+        _todasReceitas = todasReceitasCarregadas;
 
-        // Somente receitas publicadas pelo usuário.
         _minhasReceitas = receitasSupabase
             .where(
               (receita) => receita.userId == usuarioId,
             )
             .toList();
+
+        _favoritos
+          ..clear()
+          ..addAll(favoritosCarregados);
 
         _carregandoReceitas = false;
       });
@@ -86,21 +121,68 @@ class _MainScreenState extends State<MainScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Não foi possível carregar as receitas: $e',
+            'Não foi possível carregar as receitas e favoritos: $e',
           ),
         ),
       );
     }
   }
 
-  void _toggleFavorito(Recipe recipe) {
-    setState(() {
-      if (_favoritos.contains(recipe)) {
-        _favoritos.remove(recipe);
+  Future<void> _toggleFavorito(Recipe recipe) async {
+    final jaFavoritado = _favoritos.any(
+      (item) => recipe.id != null
+          ? item.id == recipe.id
+          : identical(item, recipe),
+    );
+
+    try {
+      if (jaFavoritado) {
+        // Remove o favorito do Supabase.
+        await _favoriteService.removerFavorito(
+          recipe,
+          receitas,
+        );
       } else {
-        _favoritos.add(recipe);
+        // Adiciona o favorito ao Supabase.
+        await _favoriteService.adicionarFavorito(
+          recipe,
+          receitas,
+        );
       }
-    });
+
+      if (!mounted) return;
+
+      // Atualiza a interface após o banco confirmar.
+      setState(() {
+        if (jaFavoritado) {
+          _favoritos.removeWhere(
+            (item) => recipe.id != null
+                ? item.id == recipe.id
+                : identical(item, recipe),
+          );
+        } else {
+          final jaExiste = _favoritos.any(
+            (item) => recipe.id != null
+                ? item.id == recipe.id
+                : identical(item, recipe),
+          );
+
+          if (!jaExiste) {
+            _favoritos.add(recipe);
+          }
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Não foi possível atualizar o favorito: $e',
+          ),
+        ),
+      );
+    }
   }
 
   void _adicionarMinhaReceita(
