@@ -49,7 +49,7 @@ O NutriGo encontra-se em desenvolvimento como aplicativo **Flutter/Dart**, com i
 O projeto já possui as seguintes funcionalidades implementadas:
 
 - **Autenticação:** cadastro, login, recuperação e alteração de senha, além do gerenciamento de sessão por meio do Supabase Auth.
-- **Perfis:** carregamento e edição das informações do usuário, com persistência dos dados no PostgreSQL.
+- **Perfis e configurações:** carregamento e edição das informações do usuário, preferências alimentares e configuração de notificações, com persistência dos dados no PostgreSQL.
 - **Receitas:** cadastro, consulta, edição e exclusão de receitas, com persistência no Supabase.
 - **Imagens:** envio, substituição e exclusão de fotografias utilizando Supabase Storage.
 - **Favoritos:** adição e remoção de receitas favoritas, com persistência por usuário no banco de dados.
@@ -58,7 +58,7 @@ O projeto já possui as seguintes funcionalidades implementadas:
 
 O aplicativo combina receitas demonstrativas com receitas cadastradas no banco de dados.
 
-As funcionalidades de persistência de receitas, gerenciamento de imagens e favoritos foram implementadas e testadas.
+As funcionalidades de persistência de receitas, gerenciamento de imagens, favoritos, preferências alimentares e configurações de notificações foram implementadas e testadas.
 
 O projeto continua em evolução, com melhorias e funcionalidades adicionais previstas para as próximas etapas.
 
@@ -90,6 +90,13 @@ O projeto continua em evolução, com melhorias e funcionalidades adicionais pre
 - Atualização automática dos dados exibidos no Perfil após a edição;
 - Alteração de senha pelo usuário autenticado na tela de Configurações;
 - Validação da nova senha e confirmação antes da atualização;
+- Configuração das preferências alimentares do usuário;
+- Seleção de múltiplas preferências, como vegetariana, vegana, sem lactose, sem glúten, low carb e saudável;
+- Persistência das preferências alimentares no perfil do usuário no Supabase PostgreSQL;
+- Recuperação automática das preferências alimentares salvas;
+- Ativação e desativação das notificações pela tela de Configurações;
+- Persistência da configuração de notificações no Supabase PostgreSQL;
+- Recuperação automática da configuração de notificações entre sessões;
 
 ## 🍳 Receitas
 
@@ -249,7 +256,7 @@ Após a criação do usuário, um trigger do PostgreSQL cria automaticamente o p
 
 ## Tabela `profiles`
 
-A tabela `profiles` armazena informações complementares do usuário.
+A tabela `profiles` armazena informações complementares e configurações do usuário.
 
 Estrutura utilizada:
 
@@ -257,6 +264,8 @@ Estrutura utilizada:
 profiles
 ├── id
 ├── nome
+├── preferencias_alimentares
+├── notificacoes_ativadas
 └── created_at
 ```
 
@@ -805,8 +814,6 @@ As próximas etapas do desenvolvimento incluem:
 ### 👤 Usuários e perfil
 
 - Expandir as funcionalidades do perfil do usuário;
-- Implementar preferências alimentares;
-- Evoluir as configurações de notificações;
 - Aprimorar o gerenciamento de sessão;
 - Melhorar as mensagens de validação e tratamento de erros.
 

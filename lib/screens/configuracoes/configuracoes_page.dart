@@ -21,6 +21,7 @@ class _ConfiguracoesPageState
 
   String _nomeUsuario = '';
   String _emailUsuario = '';
+  List<String> _preferenciasAlimentares = [];
 
   @override
   void initState() {
@@ -38,7 +39,7 @@ class _ConfiguracoesPageState
     try {
       final perfil = await Supabase.instance.client
           .from('profiles')
-          .select('nome')
+          .select('nome, preferencias_alimentares, notificacoes_ativadas')
           .eq('id', usuario.id)
           .single();
 
@@ -46,6 +47,12 @@ class _ConfiguracoesPageState
 
       setState(() {
         _nomeUsuario = perfil['nome']?.toString() ?? '';
+
+        _preferenciasAlimentares =
+            List<String>.from(perfil['preferencias_alimentares'] ?? []);
+
+        _notificacoesAtivadas =
+            perfil['notificacoes_ativadas'] ?? true;
       });
     } catch (e) {
       debugPrint('ERRO AO CARREGAR PERFIL: $e');
@@ -83,10 +90,40 @@ class _ConfiguracoesPageState
                 icon: Icons.notifications_none,
                 title: 'Notificações',
                 value: _notificacoesAtivadas,
-                onChanged: (value) {
-                  setState(() {
-                    _notificacoesAtivadas = value;
-                  });
+                onChanged: (value) async {
+                  final usuario =
+                      Supabase.instance.client.auth.currentUser;
+
+                  if (usuario == null) return;
+
+                  try {
+                    await Supabase.instance.client
+                        .from('profiles')
+                        .update({
+                          'notificacoes_ativadas': value,
+                        })
+                        .eq('id', usuario.id);
+
+                    if (!mounted) return;
+
+                    setState(() {
+                      _notificacoesAtivadas = value;
+                    });
+                  } catch (e) {
+                    debugPrint(
+                      'ERRO AO ATUALIZAR NOTIFICAÇÕES: $e',
+                    );
+
+                    if (!mounted) return;
+
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Não foi possível atualizar as notificações.',
+                        ),
+                      ),
+                    );
+                  }
                 },
               ),
 
@@ -104,7 +141,7 @@ class _ConfiguracoesPageState
                 icon: Icons.restaurant_menu,
                 title: 'Preferências alimentares',
                 onTap: () {
-                  // Implementaremos depois
+                  _mostrarPreferenciasAlimentares(context);
                 },
               ),
 
@@ -577,6 +614,119 @@ class _ConfiguracoesPageState
               child: const Text('Salvar'),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  void _mostrarPreferenciasAlimentares(BuildContext context) {
+    final preferencias = [
+      'Vegetariana',
+      'Vegana',
+      'Sem lactose',
+      'Sem glúten',
+      'Low carb',
+      'Saudável',
+    ];
+
+    final preferenciasSelecionadas =
+      Set<String>.from(_preferenciasAlimentares);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text(
+                'Preferências alimentares',
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: preferencias.map((preferencia) {
+                    final selecionada =
+                        preferenciasSelecionadas.contains(preferencia);
+
+                    return CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(preferencia),
+                      value: selecionada,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          if (value == true) {
+                            preferenciasSelecionadas.add(preferencia);
+                          } else {
+                            preferenciasSelecionadas.remove(preferencia);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    final usuario =
+                        Supabase.instance.client.auth.currentUser;
+
+                    if (usuario == null) return;
+
+                    try {
+                      await Supabase.instance.client
+                          .from('profiles')
+                          .update({
+                            'preferencias_alimentares':
+                                preferenciasSelecionadas.toList(),
+                          })
+                          .eq('id', usuario.id);
+
+                      if (!mounted) return;
+
+                      setState(() {
+                        _preferenciasAlimentares =
+                            preferenciasSelecionadas.toList();
+                      });
+
+                      if (!context.mounted) return;
+
+                      Navigator.pop(context);
+
+                      ScaffoldMessenger.of(this.context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Preferências alimentares salvas com sucesso!',
+                          ),
+                        ),
+                      );
+                    } catch (e) {
+                      debugPrint(
+                        'ERRO AO SALVAR PREFERÊNCIAS ALIMENTARES: $e',
+                      );
+
+                      if (!mounted) return;
+
+                      ScaffoldMessenger.of(this.context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Não foi possível salvar as preferências alimentares.',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Salvar'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
