@@ -6,6 +6,7 @@ import '../../models/recipe.dart';
 import '../../models/recipe_collection.dart';
 import '../detalhes_receita/detalhes_receita_page.dart';
 import 'criar_colecao_page.dart';
+import '../../services/supabase/supabase_collection_service.dart';
 
 class DetalhesColecaoPage extends StatefulWidget {
   final RecipeCollection colecao;
@@ -26,6 +27,7 @@ class DetalhesColecaoPage extends StatefulWidget {
 
 class _DetalhesColecaoPageState
     extends State<DetalhesColecaoPage> {
+  final _collectionService = SupabaseCollectionService();
   late RecipeCollection _colecao;
 
   @override
@@ -47,10 +49,43 @@ class _DetalhesColecaoPageState
       ),
     );
 
-    if (colecaoEditada != null) {
+    if (colecaoEditada == null) return;
+
+    try {
+      final colecaoSalva =
+          await _collectionService.atualizarColecao(
+        colecao: _colecao,
+        nome: colecaoEditada.name,
+        receitas: colecaoEditada.recipes,
+      );
+
+      if (!mounted) return;
+
       setState(() {
-        _colecao = colecaoEditada;
+        _colecao = colecaoSalva;
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Coleção atualizada com sucesso!',
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint(
+        'ERRO AO ATUALIZAR COLEÇÃO: $e',
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível atualizar a coleção.',
+          ),
+        ),
+      );
     }
   }
 
@@ -75,7 +110,6 @@ class _DetalhesColecaoPageState
                 'Cancelar',
               ),
             ),
-
             TextButton(
               onPressed: () {
                 Navigator.pop(context, true);
@@ -89,10 +123,32 @@ class _DetalhesColecaoPageState
       },
     );
 
-    if (excluir == true && mounted) {
+    if (excluir != true || !mounted) return;
+
+    try {
+      await _collectionService.excluirColecao(
+        colecao: _colecao,
+      );
+
+      if (!mounted) return;
+
       Navigator.pop(
         context,
         true,
+      );
+    } catch (e) {
+      debugPrint(
+        'ERRO AO EXCLUIR COLEÇÃO: $e',
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível excluir a coleção.',
+          ),
+        ),
       );
     }
   }

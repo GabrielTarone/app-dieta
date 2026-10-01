@@ -13,6 +13,7 @@ import '../../services/supabase/supabase_auth_service.dart';
 
 class PerfilPage extends StatefulWidget {
   final List<Recipe> favoritos;
+  final List<Recipe> receitasDisponiveis;
   final void Function(Recipe) onFavoriteTap;
 
   final List<Recipe> minhasReceitas;
@@ -27,6 +28,7 @@ class PerfilPage extends StatefulWidget {
   const PerfilPage({
     super.key,
     required this.favoritos,
+    required this.receitasDisponiveis,
     required this.onFavoriteTap,
     required this.minhasReceitas,
     required this.onAdicionarMinhaReceita,
@@ -299,6 +301,7 @@ class PerfilPage extends StatefulWidget {
               MaterialPageRoute(
                 builder: (context) => FavoritosPage(
                   favoritos: widget.favoritos,
+                  receitasDisponiveis: widget.receitasDisponiveis,
                   onFavoriteTap: widget.onFavoriteTap,
                   mostrarVoltar: true,
                 ),

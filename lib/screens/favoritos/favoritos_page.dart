@@ -7,17 +7,20 @@ import '../../models/recipe_collection.dart';
 import '../detalhes_receita/detalhes_receita_page.dart';
 import 'criar_colecao_page.dart';
 import 'detalhes_colecao_page.dart';
+import '../../services/supabase/supabase_collection_service.dart';
 
 class FavoritosPage extends StatefulWidget {
   final List<Recipe> favoritos;
   final void Function(Recipe) onFavoriteTap;
   final bool mostrarVoltar;
+  final List<Recipe> receitasDisponiveis;
 
   const FavoritosPage({
     super.key,
     required this.favoritos,
     required this.onFavoriteTap,
     this.mostrarVoltar = false,
+    required this.receitasDisponiveis,
   });
 
   @override
@@ -27,7 +30,36 @@ class FavoritosPage extends StatefulWidget {
 class _FavoritosPageState extends State<FavoritosPage> {
   String _abaSelecionada = 'Receitas';
 
+  final _collectionService = SupabaseCollectionService();
+
   final List<RecipeCollection> _colecoes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarColecoes();
+  }
+
+  Future<void> _carregarColecoes() async {
+    try {
+      final colecoes =
+          await _collectionService.buscarColecoes(
+        receitasDisponiveis: widget.receitasDisponiveis,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _colecoes
+          ..clear()
+          ..addAll(colecoes);
+      });
+    } catch (e) {
+      debugPrint(
+        'ERRO AO CARREGAR COLEÇÕES: $e',
+      );
+    }
+  }
 
   Future<void> _abrirCriarColecao() async {
     final novaColecao = await Navigator.push<RecipeCollection>(
@@ -39,10 +71,42 @@ class _FavoritosPageState extends State<FavoritosPage> {
       ),
     );
 
-    if (novaColecao != null) {
+    if (novaColecao == null) return;
+
+    try {
+      final colecaoSalva =
+          await _collectionService.criarColecao(
+        nome: novaColecao.name,
+        receitas: novaColecao.recipes,
+      );
+
+      if (!mounted) return;
+
       setState(() {
-        _colecoes.add(novaColecao);
+        _colecoes.add(colecaoSalva);
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Coleção criada com sucesso!',
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint(
+        'ERRO AO CRIAR COLEÇÃO: $e',
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível criar a coleção.',
+          ),
+        ),
+      );
     }
   }
 

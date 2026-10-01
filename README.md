@@ -44,7 +44,7 @@ O aplicativo é destinado principalmente a:
 
 # 🚀 Status atual do projeto
 
-O NutriGo encontra-se em desenvolvimento como aplicativo **Flutter/Dart**, com integração ao **Supabase** para autenticação, gerenciamento de usuários, persistência de receitas, armazenamento de imagens e favoritos.
+O NutriGo encontra-se em desenvolvimento como aplicativo **Flutter/Dart**, com integração ao **Supabase** para autenticação, gerenciamento de usuários, persistência de receitas, armazenamento de imagens, favoritos e coleções.
 
 O projeto já possui as seguintes funcionalidades implementadas:
 
@@ -53,12 +53,13 @@ O projeto já possui as seguintes funcionalidades implementadas:
 - **Receitas:** cadastro, consulta, edição e exclusão de receitas, com persistência no Supabase.
 - **Imagens:** envio, substituição e exclusão de fotografias utilizando Supabase Storage.
 - **Favoritos:** adição e remoção de receitas favoritas, com persistência por usuário no banco de dados.
+- **Coleções:** criação, consulta, edição e exclusão de coleções personalizadas de receitas, com persistência por usuário no Supabase.
 - **Segurança:** utilização de políticas Row Level Security (RLS) para controlar o acesso aos dados e arquivos.
 - **Navegação:** integração entre Home, Explorar Receitas, Favoritos, Perfil e telas de gerenciamento de receitas.
 
 O aplicativo combina receitas demonstrativas com receitas cadastradas no banco de dados.
 
-As funcionalidades de persistência de receitas, gerenciamento de imagens, favoritos, preferências alimentares e configurações de notificações foram implementadas e testadas.
+As funcionalidades de persistência de receitas, gerenciamento de imagens, favoritos, coleções, preferências alimentares e configurações de notificações foram implementadas e testadas.
 
 O projeto continua em evolução, com melhorias e funcionalidades adicionais previstas para as próximas etapas.
 
@@ -146,11 +147,36 @@ Funcionalidades implementadas:
 - Recuperar automaticamente os favoritos ao carregar o aplicativo;
 - Favoritar receitas demonstrativas e receitas cadastradas no Supabase;
 - Sincronizar a exibição dos favoritos entre Home, Explorar, Favoritos e Perfil;
+- Atualizar imediatamente o estado visual do favorito enquanto a sincronização com o Supabase ocorre em segundo plano;
 - Exibir receitas favoritas em uma tela dedicada.
 
 A tabela `favorites` utiliza `recipe_id` para receitas persistidas no banco e `demo_recipe_key` para identificar receitas demonstrativas.
 
 As políticas RLS restringem a consulta, a inclusão e a remoção dos registros de favoritos ao usuário correspondente.
+
+## 📁 Coleções
+
+O NutriGo permite organizar receitas em **coleções personalizadas**, com persistência no Supabase para cada usuário autenticado.
+
+Funcionalidades implementadas:
+
+- Criar novas coleções;
+- Definir um nome para cada coleção;
+- Adicionar receitas às coleções;
+- Visualizar as receitas pertencentes a uma coleção;
+- Editar o nome e as receitas de uma coleção;
+- Excluir coleções;
+- Recuperar automaticamente as coleções salvas;
+- Manter as coleções persistentes entre sessões;
+- Armazenar receitas demonstrativas e receitas cadastradas no Supabase em coleções;
+- Manter uma receita na coleção mesmo após ela ser removida dos favoritos;
+- Excluir automaticamente os vínculos das receitas quando uma coleção é removida.
+
+As coleções são armazenadas na tabela `collections`, enquanto a relação entre coleções e receitas é armazenada na tabela `collection_recipes`.
+
+Para receitas cadastradas no Supabase, a relação utiliza `recipe_id`. Para receitas demonstrativas, é utilizado `demo_recipe_key`.
+
+As tabelas utilizam políticas de **Row Level Security (RLS)** para restringir o acesso às coleções pertencentes ao usuário autenticado.
 
 ## 🧭 Navegação
 
@@ -188,7 +214,7 @@ O desenvolvimento é realizado utilizando o **Visual Studio Code**.
 
 O projeto utiliza o **Supabase** como solução de backend em nuvem.
 
-Atualmente, a integração contempla autenticação, gerenciamento de perfis, persistência de receitas e favoritos no PostgreSQL, além do armazenamento de imagens no Supabase Storage.
+Atualmente, a integração contempla autenticação, gerenciamento de perfis, persistência de receitas, favoritos e coleções no PostgreSQL, além do armazenamento de imagens no Supabase Storage.
 
 ## Autenticação
 
@@ -365,6 +391,88 @@ Os favoritos são recuperados quando o aplicativo carrega as receitas, permitind
 
 ---
 
+## 📁 Tabelas de coleções
+
+O sistema de coleções utiliza duas tabelas no Supabase PostgreSQL: `collections` e `collection_recipes`.
+
+### Tabela `collections`
+
+A tabela `collections` armazena as coleções criadas por cada usuário autenticado.
+
+Estrutura principal:
+
+```text
+collections
+├── id
+├── user_id
+├── name
+└── created_at
+```
+
+Os campos possuem as seguintes responsabilidades:
+
+- `id`: identificador único da coleção;
+- `user_id`: identifica o usuário proprietário da coleção;
+- `name`: armazena o nome definido pelo usuário;
+- `created_at`: registra a data de criação da coleção.
+
+Cada coleção está associada ao usuário autenticado por meio de `user_id`.
+
+### Tabela `collection_recipes`
+
+A tabela `collection_recipes` armazena as receitas pertencentes a cada coleção.
+
+Estrutura principal:
+
+```text
+collection_recipes
+├── id
+├── collection_id
+├── recipe_id
+├── demo_recipe_key
+└── created_at
+```
+
+Os campos possuem as seguintes responsabilidades:
+
+- `id`: identificador único do vínculo;
+- `collection_id`: identifica a coleção;
+- `recipe_id`: identifica uma receita cadastrada no Supabase;
+- `demo_recipe_key`: identifica uma receita demonstrativa;
+- `created_at`: registra a criação do vínculo.
+
+Uma restrição garante que cada vínculo utilize `recipe_id` ou `demo_recipe_key`, mas não ambos.
+
+O campo `collection_id` possui relação com a tabela `collections` utilizando `ON DELETE CASCADE`. Dessa forma, ao excluir uma coleção, seus vínculos em `collection_recipes` são removidos automaticamente sem excluir as receitas originais.
+
+### Operações implementadas
+
+O gerenciamento das coleções possui operações CRUD:
+
+- **CREATE:** criação de coleções e associação das receitas selecionadas;
+- **READ:** recuperação das coleções e de suas receitas;
+- **UPDATE:** alteração do nome e das receitas pertencentes à coleção;
+- **DELETE:** exclusão da coleção e remoção automática de seus vínculos.
+
+O gerenciamento é realizado pelo serviço `SupabaseCollectionService`.
+
+### Segurança das coleções
+
+As tabelas `collections` e `collection_recipes` utilizam políticas de **Row Level Security (RLS)**.
+
+As políticas permitem que o usuário autenticado:
+
+- Visualize suas próprias coleções;
+- Crie coleções associadas à própria conta;
+- Atualize suas próprias coleções;
+- Exclua suas próprias coleções;
+- Consulte as receitas vinculadas às próprias coleções;
+- Adicione, atualize e remova vínculos de receitas somente em suas próprias coleções.
+
+Dessa forma, cada usuário possui acesso apenas às suas próprias coleções e aos respectivos vínculos de receitas.
+
+---
+
 ## 📷 Supabase Storage
 
 O NutriGo utiliza o **Supabase Storage** para armazenar as imagens das receitas.
@@ -458,6 +566,7 @@ lib/
 │
 ├── models/
 │   ├── recipe.dart
+│   ├── recipe_collection.dart
 │   └── recipe_data.dart
 │
 ├── screens/
@@ -475,14 +584,19 @@ lib/
 │
 ├── services/
 │   ├── auth_service.dart
+│   ├── collection_service.dart
+│   ├── favorite_service.dart
 │   ├── profile_service.dart
+│   ├── recipe_service.dart
+│   ├── storage_service.dart
 │   │
 │   └── supabase/
 │       ├── supabase_auth_service.dart
+│       ├── supabase_collection_service.dart
+│       ├── supabase_favorite_service.dart
 │       ├── supabase_profile_service.dart
 │       ├── supabase_recipe_service.dart
-│       ├── supabase_storage_service.dart
-│       └── supabase_favorite_service.dart
+│       └── supabase_storage_service.dart
 │
 ├── env.dart
 └── main.dart
@@ -807,7 +921,7 @@ O aplicativo também poderá estabelecer parcerias com:
 
 # 🔄 Próximas etapas
 
-O NutriGo já possui autenticação, recuperação e alteração de senha, gerenciamento de perfil, gerenciamento de receitas, armazenamento de imagens e favoritos persistentes integrados ao Supabase.
+O NutriGo já possui autenticação, recuperação e alteração de senha, gerenciamento de perfil, gerenciamento de receitas, armazenamento de imagens, favoritos e coleções persistentes integrados ao Supabase.
 
 As próximas etapas do desenvolvimento incluem:
 

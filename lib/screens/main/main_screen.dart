@@ -135,32 +135,46 @@ class _MainScreenState extends State<MainScreen> {
           : identical(item, recipe),
     );
 
-    try {
+    // Atualiza a interface imediatamente.
+    setState(() {
       if (jaFavoritado) {
-        // Remove o favorito do Supabase.
+        _favoritos.removeWhere(
+          (item) => recipe.id != null
+              ? item.id == recipe.id
+              : identical(item, recipe),
+        );
+      } else {
+        final jaExiste = _favoritos.any(
+          (item) => recipe.id != null
+              ? item.id == recipe.id
+              : identical(item, recipe),
+        );
+
+        if (!jaExiste) {
+          _favoritos.add(recipe);
+        }
+      }
+    });
+
+    try {
+      // Depois sincroniza a alteração com o Supabase.
+      if (jaFavoritado) {
         await _favoriteService.removerFavorito(
           recipe,
           receitas,
         );
       } else {
-        // Adiciona o favorito ao Supabase.
         await _favoriteService.adicionarFavorito(
           recipe,
           receitas,
         );
       }
-
+    } catch (e) {
       if (!mounted) return;
 
-      // Atualiza a interface após o banco confirmar.
+      // Se o Supabase falhar, desfaz a alteração visual.
       setState(() {
         if (jaFavoritado) {
-          _favoritos.removeWhere(
-            (item) => recipe.id != null
-                ? item.id == recipe.id
-                : identical(item, recipe),
-          );
-        } else {
           final jaExiste = _favoritos.any(
             (item) => recipe.id != null
                 ? item.id == recipe.id
@@ -170,10 +184,14 @@ class _MainScreenState extends State<MainScreen> {
           if (!jaExiste) {
             _favoritos.add(recipe);
           }
+        } else {
+          _favoritos.removeWhere(
+            (item) => recipe.id != null
+                ? item.id == recipe.id
+                : identical(item, recipe),
+          );
         }
       });
-    } catch (e) {
-      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -405,11 +423,13 @@ class _MainScreenState extends State<MainScreen> {
 
       FavoritosPage(
         favoritos: _favoritos,
+        receitasDisponiveis: _todasReceitas,
         onFavoriteTap: _toggleFavorito,
       ),
 
       PerfilPage(
         favoritos: _favoritos,
+        receitasDisponiveis: _todasReceitas,
         onFavoriteTap: _toggleFavorito,
         minhasReceitas: _minhasReceitas,
         onAdicionarMinhaReceita:
