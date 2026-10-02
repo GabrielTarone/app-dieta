@@ -182,7 +182,7 @@ class _ConfiguracoesPageState
                 icon: Icons.shield_outlined,
                 title: 'Privacidade',
                 onTap: () {
-                  // Implementaremos depois
+                  _mostrarPrivacidade(context);
                 },
               ),
 
@@ -207,7 +207,7 @@ class _ConfiguracoesPageState
                 icon: Icons.description_outlined,
                 title: 'Termos de uso',
                 onTap: () {
-                  // Implementaremos depois
+                  _mostrarTermosDeUso(context);
                 },
               ),
 
@@ -216,7 +216,7 @@ class _ConfiguracoesPageState
                 icon: Icons.privacy_tip_outlined,
                 title: 'Política de privacidade',
                 onTap: () {
-                  // Implementaremos depois
+                  _mostrarPoliticaPrivacidade(context);
                 },
               ),
 
@@ -727,6 +727,99 @@ class _ConfiguracoesPageState
               ],
             );
           },
+        );
+      },
+    );
+  }
+
+  void _mostrarPrivacidade(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Privacidade'),
+          content: const SingleChildScrollView(
+            child: Text(
+              'No NutriGo, seus dados de conta são utilizados para '
+              'identificar seu perfil e permitir o funcionamento dos '
+              'recursos personalizados do aplicativo.\n\n'
+              'Suas receitas, favoritos, coleções e preferências são '
+              'associados à sua conta para que possam ser recuperados '
+              'quando você acessar o aplicativo novamente.\n\n'
+              'O acesso aos dados é protegido pelas regras de segurança '
+              'configuradas no banco de dados.',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Fechar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _mostrarTermosDeUso(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Termos de uso'),
+          content: const SingleChildScrollView(
+            child: Text(
+              'Ao utilizar o NutriGo, o usuário concorda em utilizar '
+              'o aplicativo de forma responsável e fornecer informações '
+              'adequadas ao publicar receitas.\n\n'
+              'O conteúdo cadastrado pelo usuário é de sua responsabilidade. '
+              'O NutriGo oferece recursos para descobrir, organizar, '
+              'favoritar e compartilhar receitas dentro da experiência '
+              'proposta pelo aplicativo.\n\n'
+              'Este projeto possui finalidade acadêmica e demonstrativa.',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Fechar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _mostrarPoliticaPrivacidade(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Política de privacidade'),
+          content: const SingleChildScrollView(
+            child: Text(
+              'O NutriGo utiliza informações de autenticação e perfil '
+              'para disponibilizar os recursos vinculados à conta do usuário.\n\n'
+              'Entre os dados utilizados pelo aplicativo estão nome, e-mail, '
+              'preferências alimentares, receitas, favoritos, coleções e '
+              'configurações relacionadas à experiência no aplicativo.\n\n'
+              'As informações são armazenadas no Supabase e protegidas '
+              'pelas regras de acesso configuradas para o projeto.\n\n'
+              'Este aplicativo foi desenvolvido para fins acadêmicos.',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Fechar'),
+            ),
+          ],
         );
       },
     );

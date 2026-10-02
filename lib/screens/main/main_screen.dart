@@ -29,6 +29,7 @@ class _MainScreenState extends State<MainScreen> {
   final _favoriteService = SupabaseFavoriteService();
 
   bool _carregandoReceitas = true;
+  String? _erroCarregamento;
 
   String _categoriaSelecionada = 'Todos';
 
@@ -52,6 +53,13 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _carregarReceitas() async {
+    if (mounted) {
+      setState(() {
+        _carregandoReceitas = true;
+        _erroCarregamento = null;
+      });
+    }
+
     try {
       final receitasSupabase =
           await _recipeService.listarReceitas();
@@ -110,21 +118,20 @@ class _MainScreenState extends State<MainScreen> {
           ..addAll(favoritosCarregados);
 
         _carregandoReceitas = false;
+        _erroCarregamento = null;
       });
     } catch (e) {
+      debugPrint(
+        'ERRO AO CARREGAR RECEITAS E FAVORITOS: $e',
+      );
+
       if (!mounted) return;
 
       setState(() {
         _carregandoReceitas = false;
+        _erroCarregamento =
+            'Não foi possível carregar seus dados.';
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Não foi possível carregar as receitas e favoritos: $e',
-          ),
-        ),
-      );
     }
   }
 
@@ -383,6 +390,72 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  Widget _buildErroCarregamento(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(
+          AppTheme.spacingLg,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.cloud_off_outlined,
+              size: 56,
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurfaceVariant,
+            ),
+
+            const SizedBox(
+              height: AppTheme.spacingMd,
+            ),
+
+            Text(
+              'Não foi possível carregar o NutriGo',
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .headlineMedium,
+            ),
+
+            const SizedBox(
+              height: AppTheme.spacingSm,
+            ),
+
+            Text(
+              _erroCarregamento ??
+                  'Verifique sua conexão e tente novamente.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant,
+                  ),
+            ),
+
+            const SizedBox(
+              height: AppTheme.spacingLg,
+            ),
+
+            ElevatedButton.icon(
+              onPressed: _carregarReceitas,
+              icon: const Icon(
+                Icons.refresh,
+              ),
+              label: const Text(
+                'Tentar novamente',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
@@ -446,7 +519,9 @@ class _MainScreenState extends State<MainScreen> {
           ? const Center(
               child: CircularProgressIndicator(),
             )
-          : screens[_currentIndex],
+          : _erroCarregamento != null
+              ? _buildErroCarregamento(context)
+              : screens[_currentIndex],
 
       bottomNavigationBar:
           BottomNavigationBar(

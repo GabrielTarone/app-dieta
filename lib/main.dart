@@ -7,6 +7,7 @@ import 'screens/login/login_page.dart';
 import 'screens/redefinir_senha/redefinir_senha_page.dart';
 import 'env.dart';
 import 'dart:async';
+import 'screens/main/main_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -78,6 +79,21 @@ class MyAppState extends State<MyApp> {
     });
   }
 
+  Widget _telaInicial() {
+    if (!Env.supabaseConfigurado) {
+      return const LoginPage();
+    }
+
+    final sessaoAtual =
+        Supabase.instance.client.auth.currentSession;
+
+    if (sessaoAtual != null) {
+      return const MainScreen();
+    }
+
+    return const LoginPage();
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -89,7 +105,7 @@ class MyAppState extends State<MyApp> {
       darkTheme: AppTheme.dark,
       themeMode: _themeMode,
 
-      home: const LoginPage(),
+      home: _telaInicial(),
     );
   }
 }

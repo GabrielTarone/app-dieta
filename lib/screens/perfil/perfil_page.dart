@@ -20,10 +20,8 @@ class PerfilPage extends StatefulWidget {
   final void Function(Recipe) onAdicionarMinhaReceita;
   final Future<void> Function(Recipe) onRemoverMinhaReceita;
 
-  final Future<void> Function(
-    Recipe receitaAntiga,
-    Recipe receitaEditada,
-  ) onEditarMinhaReceita;
+  final Future<void> Function(Recipe receitaAntiga, Recipe receitaEditada)
+  onEditarMinhaReceita;
 
   const PerfilPage({
     super.key,
@@ -36,52 +34,112 @@ class PerfilPage extends StatefulWidget {
     required this.onEditarMinhaReceita,
   });
 
-    @override
-    State<PerfilPage> createState() => _PerfilPageState();
+  @override
+  State<PerfilPage> createState() => _PerfilPageState();
+}
+
+class _PerfilPageState extends State<PerfilPage> {
+  String _nomeUsuario = '';
+  String _emailUsuario = '';
+  int _totalCurtidasRecebidas = 0;
+  int _totalSeguindo = 0;
+
+  int get _totalPontos {
+    final pontosReceitas = widget.minhasReceitas.length * 100;
+    final pontosCurtidas = _totalCurtidasRecebidas * 10;
+
+    return pontosReceitas + pontosCurtidas;
   }
 
-  class _PerfilPageState extends State<PerfilPage> {
-    String _nomeUsuario = '';
-    String _emailUsuario = '';
+  int get _nivelUsuario {
+    if (_totalPontos >= 800) return 5;
+    if (_totalPontos >= 600) return 4;
+    if (_totalPontos >= 400) return 3;
+    if (_totalPontos >= 200) return 2;
 
-    @override
-    void initState() {
-      super.initState();
+    return 1;
+  }
 
-      final usuario = Supabase.instance.client.auth.currentUser;
+  @override
+  void initState() {
+    super.initState();
 
-      _emailUsuario = usuario?.email ?? '';
+    final usuario = Supabase.instance.client.auth.currentUser;
 
-      _carregarPerfil();
+    _emailUsuario = usuario?.email ?? '';
+
+    _carregarPerfil();
+    _carregarCurtidasRecebidas();
+    _carregarTotalSeguindo();
+  }
+
+  Future<void> _carregarPerfil() async {
+    final usuario = Supabase.instance.client.auth.currentUser;
+
+    if (usuario == null) return;
+
+    try {
+      final perfil = await Supabase.instance.client
+          .from('profiles')
+          .select('nome')
+          .eq('id', usuario.id)
+          .single();
+
+      if (!mounted) return;
+
+      setState(() {
+        _nomeUsuario = perfil['nome']?.toString() ?? '';
+      });
+    } catch (e) {
+      debugPrint('ERRO AO CARREGAR PERFIL: $e');
     }
+  }
 
-    Future<void> _carregarPerfil() async {
-      final usuario = Supabase.instance.client.auth.currentUser;
+  Future<void> _carregarCurtidasRecebidas() async {
+    final usuario = Supabase.instance.client.auth.currentUser;
 
-      if (usuario == null) return;
+    if (usuario == null) return;
 
-      try {
-        final perfil = await Supabase.instance.client
-            .from('profiles')
-            .select('nome')
-            .eq('id', usuario.id)
-            .single();
+    try {
+      final resultado = await Supabase.instance.client.rpc(
+        'get_my_received_likes_count',
+      );
 
-        if (!mounted) return;
+      if (!mounted) return;
 
-        setState(() {
-          _nomeUsuario = perfil['nome']?.toString() ?? '';
-        });
-      } catch (e) {
-        debugPrint('ERRO AO CARREGAR PERFIL: $e');
-      }
+      setState(() {
+        _totalCurtidasRecebidas = int.tryParse(resultado.toString()) ?? 0;
+      });
+    } catch (e) {
+      debugPrint('ERRO AO CARREGAR CURTIDAS RECEBIDAS: $e');
     }
+  }
 
-    @override
-    Widget build(BuildContext context) {
+  Future<void> _carregarTotalSeguindo() async {
+    final usuario = Supabase.instance.client.auth.currentUser;
+
+    if (usuario == null) return;
+
+    try {
+      final seguindo = await Supabase.instance.client
+          .from('follows')
+          .select('id')
+          .eq('follower_id', usuario.id);
+
+      if (!mounted) return;
+
+      setState(() {
+        _totalSeguindo = seguindo.length;
+      });
+    } catch (e) {
+      debugPrint('ERRO AO CARREGAR TOTAL SEGUINDO: $e');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -94,29 +152,21 @@ class PerfilPage extends StatefulWidget {
                 ),
                 child: Column(
                   children: [
-                    const SizedBox(
-                      height: AppTheme.spacingMd,
-                    ),
+                    const SizedBox(height: AppTheme.spacingMd),
 
                     _buildLevel(context),
 
-                    const SizedBox(
-                      height: AppTheme.spacingLg,
-                    ),
+                    const SizedBox(height: AppTheme.spacingLg),
 
                     _buildStats(context),
 
-                    const SizedBox(
-                      height: AppTheme.spacingLg,
-                    ),
+                    const SizedBox(height: AppTheme.spacingLg),
 
                     const Divider(),
 
                     _buildMenu(context),
 
-                    const SizedBox(
-                      height: AppTheme.spacingLg,
-                    ),
+                    const SizedBox(height: AppTheme.spacingLg),
                   ],
                 ),
               ),
@@ -166,23 +216,16 @@ class PerfilPage extends StatefulWidget {
             children: [
               Text(
                 _nomeUsuario.isEmpty ? 'Usuário' : _nomeUsuario,
-                style: Theme.of(context)
-                    .textTheme
-                    .headlineMedium,
+                style: Theme.of(context).textTheme.headlineMedium,
               ),
 
               const SizedBox(height: 4),
 
               Text(
                 _emailUsuario,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurfaceVariant,
-                    ),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -202,11 +245,10 @@ class PerfilPage extends StatefulWidget {
         borderRadius: BorderRadius.circular(24),
       ),
       child: Text(
-        'Nível 3    •    450 pontos',
-        style:
-            Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppTheme.cinzaEscuro,
-                ),
+        'Nível $_nivelUsuario    •    $_totalPontos pontos',
+        style: Theme.of(
+          context,
+        ).textTheme.bodyLarge?.copyWith(color: AppTheme.cinzaEscuro),
       ),
     );
   }
@@ -217,17 +259,17 @@ class PerfilPage extends StatefulWidget {
       children: [
         _buildStat(
           context,
-          value: '24',
+          value: widget.minhasReceitas.length.toString(),
           label: 'Receitas',
         ),
         _buildStat(
           context,
-          value: '156',
+          value: _totalCurtidasRecebidas.toString(),
           label: 'Curtidas',
         ),
         _buildStat(
           context,
-          value: '18',
+          value: _totalSeguindo.toString(),
           label: 'Seguindo',
         ),
       ],
@@ -241,23 +283,15 @@ class PerfilPage extends StatefulWidget {
   }) {
     return Column(
       children: [
-        Text(
-          value,
-          style: Theme.of(context).textTheme.bodyLarge,
-        ),
+        Text(value, style: Theme.of(context).textTheme.bodyLarge),
 
-        const SizedBox(
-          height: AppTheme.spacingSm,
-        ),
+        const SizedBox(height: AppTheme.spacingSm),
 
         Text(
           label,
-          style:
-              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurfaceVariant,
-                  ),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -266,7 +300,6 @@ class PerfilPage extends StatefulWidget {
   Widget _buildMenu(BuildContext context) {
     return Column(
       children: [
-
         _buildMenuItem(
           context,
           icon: Icons.menu_book_outlined,
@@ -279,12 +312,9 @@ class PerfilPage extends StatefulWidget {
                   favoritos: widget.favoritos,
                   onFavoriteTap: widget.onFavoriteTap,
                   minhasReceitas: widget.minhasReceitas,
-                  onAdicionarMinhaReceita:
-                      widget.onAdicionarMinhaReceita,
-                  onRemoverMinhaReceita:
-                      widget.onRemoverMinhaReceita,
-                  onEditarMinhaReceita:
-                      widget.onEditarMinhaReceita,
+                  onAdicionarMinhaReceita: widget.onAdicionarMinhaReceita,
+                  onRemoverMinhaReceita: widget.onRemoverMinhaReceita,
+                  onEditarMinhaReceita: widget.onEditarMinhaReceita,
                 ),
               ),
             );
@@ -320,8 +350,7 @@ class PerfilPage extends StatefulWidget {
             await Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) =>
-                    const ConfiguracoesPage(),
+                builder: (context) => const ConfiguracoesPage(),
               ),
             );
 
@@ -338,10 +367,7 @@ class PerfilPage extends StatefulWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    const NotificacoesPage(),
-              ),
+              MaterialPageRoute(builder: (context) => const NotificacoesPage()),
             );
           },
         ),
@@ -353,10 +379,7 @@ class PerfilPage extends StatefulWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    const AjudaSuportePage(),
-              ),
+              MaterialPageRoute(builder: (context) => const AjudaSuportePage()),
             );
           },
         ),
@@ -376,9 +399,7 @@ class PerfilPage extends StatefulWidget {
 
               Navigator.pushAndRemoveUntil(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const LoginPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const LoginPage()),
                 (route) => false,
               );
             } catch (e) {
@@ -386,9 +407,7 @@ class PerfilPage extends StatefulWidget {
 
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text(
-                    'Não foi possível sair. Tente novamente.',
-                  ),
+                  content: Text('Não foi possível sair. Tente novamente.'),
                 ),
               );
             }
@@ -408,36 +427,25 @@ class PerfilPage extends StatefulWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 12,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
             Icon(
               icon,
-              color:
-                  Theme.of(context).colorScheme.onSurface,
+              color: Theme.of(context).colorScheme.onSurface,
               size: 26,
             ),
 
-            const SizedBox(
-              width: AppTheme.spacingMd,
-            ),
+            const SizedBox(width: AppTheme.spacingMd),
 
             Expanded(
-              child: Text(
-                title,
-                style:
-                    Theme.of(context).textTheme.bodyMedium,
-              ),
+              child: Text(title, style: Theme.of(context).textTheme.bodyMedium),
             ),
 
             if (showArrow)
               Icon(
                 Icons.chevron_right,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurfaceVariant,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
           ],
         ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../services/supabase/supabase_follow_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/recipe.dart';
 import '../publicar_receita/publicar_receita_page.dart';
@@ -34,12 +36,116 @@ class _DetalhesReceitaPageState
   late bool _isFavorite;
   late Recipe _recipe;
 
+  final _followService = SupabaseFollowService();
+
+  String _nomeAutor = '';
+  bool _estaSeguindo = false;
+  bool _carregandoAutor = false;
+
   @override
   void initState() {
     super.initState();
 
     _isFavorite = widget.isFavorite;
     _recipe = widget.recipe;
+
+    _carregarAutor();
+  }
+
+  bool get _ehMinhaReceita {
+    final usuarioAtual =
+        Supabase.instance.client.auth.currentUser;
+
+    return usuarioAtual != null &&
+        _recipe.userId != null &&
+        usuarioAtual.id == _recipe.userId;
+  }
+
+  Future<void> _carregarAutor() async {
+    final autorId = _recipe.userId;
+
+    if (autorId == null || autorId.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _carregandoAutor = true;
+    });
+
+    try {
+      final nome =
+          await _followService.buscarNomeUsuario(autorId);
+
+      bool seguindo = false;
+
+      if (!_ehMinhaReceita) {
+        seguindo =
+            await _followService.estaSeguindo(autorId);
+      }
+
+      if (!mounted) return;
+
+      setState(() {
+        _nomeAutor = nome;
+        _estaSeguindo = seguindo;
+      });
+    } catch (e) {
+      debugPrint(
+        'ERRO AO CARREGAR AUTOR DA RECEITA: $e',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _carregandoAutor = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _alternarSeguir() async {
+    final autorId = _recipe.userId;
+
+    if (autorId == null ||
+        autorId.isEmpty ||
+        _ehMinhaReceita ||
+        _carregandoAutor) {
+      return;
+    }
+
+    final estadoAnterior = _estaSeguindo;
+
+    setState(() {
+      _estaSeguindo = !estadoAnterior;
+      _carregandoAutor = true;
+    });
+
+    try {
+      if (estadoAnterior) {
+        await _followService.deixarDeSeguir(autorId);
+      } else {
+        await _followService.seguir(autorId);
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _estaSeguindo = estadoAnterior;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível atualizar este perfil.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _carregandoAutor = false;
+        });
+      }
+    }
   }
 
   Future<void> _editarReceita() async {
@@ -215,6 +321,12 @@ ${_recipe.preparation.asMap().entries.map(
               ),
 
               const SizedBox(
+                height: AppTheme.spacingMd,
+              ),
+
+              _buildAuthor(context),
+
+              const SizedBox(
                 height: AppTheme.spacingLg,
               ),
 
@@ -306,6 +418,52 @@ ${_recipe.preparation.asMap().entries.map(
         color: AppTheme.verdeClaro,
         child: imagem,
       ),
+    );
+  }
+
+  Widget _buildAuthor(BuildContext context) {
+    if (_recipe.userId == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Row(
+      children: [
+        const CircleAvatar(
+          radius: 18,
+          backgroundColor: AppTheme.verdeClaro,
+          child: Icon(
+            Icons.person_outline,
+            color: AppTheme.verdePrincipal,
+            size: 20,
+          ),
+        ),
+
+        const SizedBox(
+          width: AppTheme.spacingSm,
+        ),
+
+        Expanded(
+          child: Text(
+            _nomeAutor.isEmpty
+                ? 'Carregando autor...'
+                : 'Por $_nomeAutor',
+            style: Theme.of(context)
+                .textTheme
+                .bodyLarge,
+          ),
+        ),
+
+        if (!_ehMinhaReceita)
+          OutlinedButton(
+            onPressed:
+                _carregandoAutor ? null : _alternarSeguir,
+            child: Text(
+              _estaSeguindo
+                  ? 'Seguindo ✓'
+                  : 'Seguir',
+            ),
+          ),
+      ],
     );
   }
 

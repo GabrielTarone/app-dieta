@@ -54,7 +54,12 @@ O projeto já possui as seguintes funcionalidades implementadas:
 - **Imagens:** envio, substituição e exclusão de fotografias utilizando Supabase Storage.
 - **Favoritos:** adição e remoção de receitas favoritas, com persistência por usuário no banco de dados.
 - **Coleções:** criação, consulta, edição e exclusão de coleções personalizadas de receitas, com persistência por usuário no Supabase.
+- **Sessão do usuário:** restauração automática da sessão autenticada, permitindo que o usuário retorne ao aplicativo sem realizar um novo login enquanto a sessão permanecer válida.
+- **Perfil e progresso:** exibição dinâmica de receitas publicadas, curtidas recebidas, usuários seguidos, nível e pontuação.
+- **Relacionamentos entre usuários:** estrutura de seguidores implementada no Supabase, com controle de segurança por RLS.
+- **Tratamento de carregamento:** exibição de indicador durante o carregamento dos dados e tratamento de falhas com opção de nova tentativa.
 - **Segurança:** utilização de políticas Row Level Security (RLS) para controlar o acesso aos dados e arquivos.
+- **Integridade dos dados:** utilização de chaves estrangeiras e restrições de unicidade para evitar registros duplicados em favoritos, relacionamentos entre usuários e vínculos entre receitas e coleções.
 - **Navegação:** integração entre Home, Explorar Receitas, Favoritos, Perfil e telas de gerenciamento de receitas.
 
 O aplicativo combina receitas demonstrativas com receitas cadastradas no banco de dados.
@@ -84,7 +89,10 @@ O projeto continua em evolução, com melhorias e funcionalidades adicionais pre
 - Armazenamento do perfil do usuário;
 - Identificação do usuário autenticado;
 - Exibição dinâmica do nome do usuário na Home;
-- Estrutura preparada para gerenciamento de sessão;
+- Gerenciamento de sessão utilizando Supabase Auth;
+- Restauração automática da sessão autenticada ao iniciar o aplicativo;
+- Redirecionamento automático para a aplicação quando existe uma sessão válida;
+- Retorno à tela de login após o encerramento da sessão;
 - Exibição dinâmica do nome e e-mail do usuário na tela de Perfil;
 - Edição do nome do usuário pela tela de Configurações;
 - Persistência das alterações do perfil no Supabase PostgreSQL;
@@ -98,6 +106,11 @@ O projeto continua em evolução, com melhorias e funcionalidades adicionais pre
 - Ativação e desativação das notificações pela tela de Configurações;
 - Persistência da configuração de notificações no Supabase PostgreSQL;
 - Recuperação automática da configuração de notificações entre sessões;
+- Exibição da quantidade de receitas publicadas pelo usuário;
+- Contabilização de curtidas recebidas nas receitas publicadas;
+- Contabilização de usuários seguidos;
+- Sistema de pontuação baseado na atividade do usuário;
+- Exibição dinâmica do nível do usuário de acordo com sua pontuação.
 
 ## 🍳 Receitas
 
@@ -177,6 +190,22 @@ As coleções são armazenadas na tabela `collections`, enquanto a relação ent
 Para receitas cadastradas no Supabase, a relação utiliza `recipe_id`. Para receitas demonstrativas, é utilizado `demo_recipe_key`.
 
 As tabelas utilizam políticas de **Row Level Security (RLS)** para restringir o acesso às coleções pertencentes ao usuário autenticado.
+
+## 👥 Relacionamentos entre usuários
+
+O NutriGo possui uma estrutura de relacionamentos entre usuários utilizando a tabela `follows` no Supabase PostgreSQL.
+
+A relação utiliza:
+
+- `follower_id`: identifica o usuário que segue;
+- `following_id`: identifica o usuário seguido;
+- `created_at`: registra a criação do relacionamento.
+
+As regras de integridade impedem que um usuário siga a si mesmo e evitam que o mesmo relacionamento seja cadastrado mais de uma vez.
+
+As políticas de Row Level Security (RLS) controlam a criação, consulta e remoção desses relacionamentos.
+
+A quantidade de usuários seguidos é utilizada dinamicamente nas estatísticas exibidas no Perfil.
 
 ## 🧭 Navegação
 
@@ -311,6 +340,12 @@ As políticas implementadas garantem que um usuário autenticado possa:
 
 Dessa forma, os dados de cada perfil são associados ao usuário autenticado.
 
+Além da tabela `profiles`, o projeto utiliza Row Level Security nas tabelas `recipes`, `favorites`, `collections`, `collection_recipes` e `follows`.
+
+As políticas foram configuradas de acordo com a responsabilidade de cada recurso. Receitas podem ser visualizadas pelos usuários autenticados, enquanto operações de criação, edição e exclusão são restritas ao proprietário. Favoritos, coleções e seus vínculos são protegidos de acordo com o usuário autenticado.
+
+Também são utilizadas restrições de unicidade para evitar favoritos duplicados, relacionamentos duplicados entre usuários e a inclusão repetida da mesma receita em uma mesma coleção.
+
 ---
 
 ## 🍳 Tabela `recipes`
@@ -442,6 +477,8 @@ Os campos possuem as seguintes responsabilidades:
 - `created_at`: registra a criação do vínculo.
 
 Uma restrição garante que cada vínculo utilize `recipe_id` ou `demo_recipe_key`, mas não ambos.
+
+Para receitas persistidas no Supabase, uma restrição de unicidade em `collection_id` e `recipe_id` impede que a mesma receita seja adicionada mais de uma vez à mesma coleção.
 
 O campo `collection_id` possui relação com a tabela `collections` utilizando `ON DELETE CASCADE`. Dessa forma, ao excluir uma coleção, seus vínculos em `collection_recipes` são removidos automaticamente sem excluir as receitas originais.
 
@@ -594,6 +631,7 @@ lib/
 │       ├── supabase_auth_service.dart
 │       ├── supabase_collection_service.dart
 │       ├── supabase_favorite_service.dart
+│       ├── supabase_follow_service.dart
 │       ├── supabase_profile_service.dart
 │       ├── supabase_recipe_service.dart
 │       └── supabase_storage_service.dart
@@ -921,45 +959,36 @@ O aplicativo também poderá estabelecer parcerias com:
 
 # 🔄 Próximas etapas
 
-O NutriGo já possui autenticação, recuperação e alteração de senha, gerenciamento de perfil, gerenciamento de receitas, armazenamento de imagens, favoritos e coleções persistentes integrados ao Supabase.
+O NutriGo já possui sua estrutura principal integrada ao Supabase, incluindo autenticação, gerenciamento de sessão, recuperação e alteração de senha, perfis, receitas, imagens, favoritos, coleções, preferências do usuário e políticas de segurança.
 
-As próximas etapas do desenvolvimento incluem:
+Nesta etapa, o desenvolvimento encontra-se em fase de revisão, validação e preparação da entrega.
 
-### 👤 Usuários e perfil
+As próximas atividades incluem:
 
-- Expandir as funcionalidades do perfil do usuário;
-- Aprimorar o gerenciamento de sessão;
-- Melhorar as mensagens de validação e tratamento de erros.
+### 👥 Recursos sociais
 
-### 🍳 Receitas e experiência do usuário
+- Finalizar e validar o fluxo de seguir e deixar de seguir outros usuários;
+- Validar o comportamento dos relacionamentos utilizando diferentes contas.
 
-- Aprimorar a busca e os filtros de receitas;
-- Melhorar a experiência de publicação e edição;
-- Implementar indicadores de carregamento;
-- Aprimorar o tratamento de falhas de conexão;
-- Refinar a responsividade das interfaces.
+### 🎨 Interface e experiência
 
-### 🔒 Configurações e privacidade
-
-- Implementar as opções de privacidade;
-- Adicionar os Termos de Uso;
-- Adicionar a Política de Privacidade;
-- Expandir as opções disponíveis na tela de Configurações.
+- Realizar a revisão visual das telas em relação ao protótipo;
+- Refinar eventuais diferenças de espaçamento, tipografia e componentes;
+- Revisar a responsividade das principais interfaces.
 
 ### 🧪 Testes e validação
 
-- Realizar testes completos dos principais fluxos de autenticação;
-- Validar as operações de receitas com diferentes usuários;
-- Testar as políticas de segurança do Supabase;
-- Validar o comportamento do aplicativo em diferentes dispositivos;
+- Realizar testes finais dos principais fluxos da aplicação;
+- Validar o comportamento com diferentes usuários;
+- Realizar testes de regressão das funcionalidades já implementadas;
 - Revisar possíveis erros e inconsistências.
 
 ### 📱 Preparação da entrega
 
-- Revisar a documentação do projeto;
-- Atualizar as imagens das interfaces;
+- Atualizar as imagens das interfaces utilizadas na documentação;
+- Revisar a documentação final do projeto;
 - Gerar e validar o APK Android;
-- Realizar os testes finais da aplicação;
+- Confirmar a execução do projeto sem problemas utilizando `flutter analyze`;
 - Preparar a versão final para apresentação acadêmica.
 
 ---
