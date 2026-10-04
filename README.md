@@ -48,15 +48,15 @@ O NutriGo encontra-se em desenvolvimento como aplicativo **Flutter/Dart**, com i
 
 O projeto já possui as seguintes funcionalidades implementadas:
 
-- **Autenticação:** cadastro, login, recuperação e alteração de senha, além do gerenciamento de sessão por meio do Supabase Auth.
-- **Perfis e configurações:** carregamento e edição das informações do usuário, preferências alimentares e configuração de notificações, com persistência dos dados no PostgreSQL.
+- **Autenticação:** cadastro, login com e-mail e senha, login com Google, recuperação e alteração de senha, além do gerenciamento de sessão por meio do Supabase Auth.
+- **Perfis e configurações:** carregamento e edição das informações do usuário, foto de perfil, preferências alimentares e configuração de notificações, com persistência dos dados no Supabase.
 - **Receitas:** cadastro, consulta, edição e exclusão de receitas, com persistência no Supabase.
-- **Imagens:** envio, substituição e exclusão de fotografias utilizando Supabase Storage.
-- **Favoritos:** adição e remoção de receitas favoritas, com persistência por usuário no banco de dados.
+- **Imagens:** envio, substituição e exclusão de fotografias de receitas e avatares utilizando Supabase Storage.
+- **Favoritos e curtidas:** adição e remoção de receitas favoritas, contabilização das curtidas recebidas nas próprias receitas e identificação dos usuários que curtiram.
 - **Coleções:** criação, consulta, edição e exclusão de coleções personalizadas de receitas, com persistência por usuário no Supabase.
 - **Sessão do usuário:** restauração automática da sessão autenticada, permitindo que o usuário retorne ao aplicativo sem realizar um novo login enquanto a sessão permanecer válida.
-- **Perfil e progresso:** exibição dinâmica de receitas publicadas, curtidas recebidas, usuários seguidos, nível e pontuação.
-- **Relacionamentos entre usuários:** estrutura de seguidores implementada no Supabase, com controle de segurança por RLS.
+- **Perfil e progresso:** exibição dinâmica de receitas publicadas, curtidas recebidas, usuários seguidos, nível e pontuação, com acesso às informações pelas estatísticas do perfil.
+- **Relacionamentos entre usuários:** seguir e deixar de seguir usuários, consulta de seguidores e de usuários seguidos e tela de Conexões, com controle de segurança por RLS.
 - **Tratamento de carregamento:** exibição de indicador durante o carregamento dos dados e tratamento de falhas com opção de nova tentativa.
 - **Segurança:** utilização de políticas Row Level Security (RLS) para controlar o acesso aos dados e arquivos.
 - **Integridade dos dados:** utilização de chaves estrangeiras e restrições de unicidade para evitar registros duplicados em favoritos, relacionamentos entre usuários e vínculos entre receitas e coleções.
@@ -77,6 +77,8 @@ O projeto continua em evolução, com melhorias e funcionalidades adicionais pre
 
 - Cadastro de novos usuários;
 - Login com e-mail e senha;
+- Login com Google utilizando OAuth e Supabase Auth;
+- Retorno automático ao NutriGo após a autenticação com Google por deep link;
 - Autenticação utilizando Supabase Auth;
 - Validação dos campos de cadastro e login;
 - Recuperação de senha por e-mail;
@@ -94,6 +96,8 @@ O projeto continua em evolução, com melhorias e funcionalidades adicionais pre
 - Redirecionamento automático para a aplicação quando existe uma sessão válida;
 - Retorno à tela de login após o encerramento da sessão;
 - Exibição dinâmica do nome e e-mail do usuário na tela de Perfil;
+- Seleção, alteração e remoção da foto de perfil;
+- Armazenamento do avatar no Supabase Storage, associado ao usuário autenticado;
 - Edição do nome do usuário pela tela de Configurações;
 - Persistência das alterações do perfil no Supabase PostgreSQL;
 - Atualização automática dos dados exibidos no Perfil após a edição;
@@ -107,8 +111,12 @@ O projeto continua em evolução, com melhorias e funcionalidades adicionais pre
 - Persistência da configuração de notificações no Supabase PostgreSQL;
 - Recuperação automática da configuração de notificações entre sessões;
 - Exibição da quantidade de receitas publicadas pelo usuário;
+- Acesso às próprias receitas por meio da estatística `Receitas` no Perfil;
 - Contabilização de curtidas recebidas nas receitas publicadas;
+- Visualização das próprias receitas que receberam curtidas e dos usuários que curtiram;
+- Acesso à tela de curtidas recebidas por meio da estatística `Curtidas` no Perfil;
 - Contabilização de usuários seguidos;
+- Acesso à tela de Conexões por meio da estatística `Seguindo` no Perfil;
 - Sistema de pontuação baseado na atividade do usuário;
 - Exibição dinâmica do nível do usuário de acordo com sua pontuação.
 
@@ -193,7 +201,7 @@ As tabelas utilizam políticas de **Row Level Security (RLS)** para restringir o
 
 ## 👥 Relacionamentos entre usuários
 
-O NutriGo possui uma estrutura de relacionamentos entre usuários utilizando a tabela `follows` no Supabase PostgreSQL.
+O NutriGo possui recursos sociais persistidos por meio da tabela `follows` no Supabase PostgreSQL.
 
 A relação utiliza:
 
@@ -201,11 +209,19 @@ A relação utiliza:
 - `following_id`: identifica o usuário seguido;
 - `created_at`: registra a criação do relacionamento.
 
+Funcionalidades implementadas:
+
+- Seguir outros usuários;
+- Deixar de seguir usuários;
+- Consultar os seguidores do usuário autenticado;
+- Consultar os usuários que o usuário autenticado segue;
+- Tela **Conexões** com abas **Seguidores** e **Seguindo**;
+- Atualização dinâmica das relações sociais;
+- Exibição da quantidade de usuários seguidos nas estatísticas do Perfil.
+
 As regras de integridade impedem que um usuário siga a si mesmo e evitam que o mesmo relacionamento seja cadastrado mais de uma vez.
 
-As políticas de Row Level Security (RLS) controlam a criação, consulta e remoção desses relacionamentos.
-
-A quantidade de usuários seguidos é utilizada dinamicamente nas estatísticas exibidas no Perfil.
+As políticas de Row Level Security (RLS) controlam a criação, consulta e remoção dos relacionamentos. Os perfis necessários à experiência social podem ser consultados por usuários autenticados, enquanto a criação e a alteração dos dados de perfil permanecem protegidas de acordo com o usuário correspondente.
 
 ## 🧭 Navegação
 
@@ -217,7 +233,10 @@ O aplicativo possui navegação entre as principais áreas:
 - Perfil;
 - Detalhes da receita;
 - Publicação de receita;
-- Configurações.
+- Configurações;
+- Conexões, com Seguidores e Seguindo;
+- Curtidas recebidas;
+- Minhas receitas.
 
 ---
 
@@ -247,9 +266,13 @@ Atualmente, a integração contempla autenticação, gerenciamento de perfis, pe
 
 ## Autenticação
 
-O cadastro é realizado utilizando o **Supabase Auth**.
+O cadastro e o login com e-mail e senha são realizados utilizando o **Supabase Auth**.
+
+O aplicativo também possui **login com Google via OAuth**, integrado ao Supabase Auth. Após a escolha e autenticação da conta Google, o usuário retorna ao NutriGo por meio do deep link configurado para o aplicativo.
 
 Cada usuário possui um identificador único (`UUID`) gerado pelo sistema de autenticação.
+
+> O botão de autenticação com Apple permanece como integração futura, pois sua configuração definitiva depende das credenciais e recursos correspondentes do Apple Developer Program.
 
 ### Recuperação de senha
 
@@ -319,6 +342,7 @@ Estrutura utilizada:
 profiles
 ├── id
 ├── nome
+├── avatar_url
 ├── preferencias_alimentares
 ├── notificacoes_ativadas
 └── created_at
@@ -332,13 +356,11 @@ O campo `id` possui relação com o usuário criado pelo Supabase Auth.
 
 A tabela `profiles` utiliza **Row Level Security (RLS)**.
 
-As políticas implementadas garantem que um usuário autenticado possa:
+As políticas implementadas permitem que usuários autenticados consultem os perfis necessários às funcionalidades sociais do aplicativo.
 
-- visualizar seu próprio perfil;
-- criar seu próprio perfil;
-- atualizar seu próprio perfil.
+A criação e a atualização dos dados de perfil permanecem restritas ao usuário proprietário do respectivo perfil.
 
-Dessa forma, os dados de cada perfil são associados ao usuário autenticado.
+Dessa forma, informações necessárias para recursos como Seguidores, Seguindo e Curtidas podem ser exibidas sem permitir que outro usuário altere os dados de um perfil que não lhe pertence.
 
 Além da tabela `profiles`, o projeto utiliza Row Level Security nas tabelas `recipes`, `favorites`, `collections`, `collection_recipes` e `follows`.
 
@@ -512,46 +534,20 @@ Dessa forma, cada usuário possui acesso apenas às suas próprias coleções e 
 
 ## 📷 Supabase Storage
 
-O NutriGo utiliza o **Supabase Storage** para armazenar as imagens das receitas.
+O NutriGo utiliza o **Supabase Storage** para armazenar imagens de receitas e fotos de perfil.
 
-O bucket utilizado é:
+Os buckets utilizados incluem:
 
 ```text
 receitas
+avatars
 ```
 
 Os arquivos são organizados em pastas identificadas pelo UUID do usuário autenticado.
 
-Exemplo ilustrativo:
+O aplicativo permite upload e exibição de imagens JPG, PNG e WebP, substituição e exclusão de imagens de receitas e seleção, alteração e remoção da foto de perfil. As operações de alteração são protegidas por políticas de acesso e organizadas em pastas associadas ao usuário autenticado.
 
-```text
-receitas/
-└── UUID_DO_USUARIO/
-    ├── imagem_1.jpg
-    └── imagem_2.png
-```
-
-O aplicativo permite:
-
-- Upload de imagens JPG, PNG e WebP;
-- Limite de 5 MB por imagem;
-- Exibição das imagens armazenadas;
-- Substituição de imagens durante a edição;
-- Exclusão das imagens associadas às receitas removidas;
-- Limpeza da imagem anterior após uma substituição bem-sucedida.
-
-### Segurança do armazenamento
-
-O bucket utiliza políticas de acesso para operações de:
-
-- `SELECT`;
-- `INSERT`;
-- `UPDATE`;
-- `DELETE`.
-
-As operações de alteração são restringidas aos arquivos localizados nas pastas pertencentes ao usuário autenticado.
-
-O serviço `SupabaseStorageService` centraliza as operações de armazenamento e exclusão de imagens.
+O serviço `SupabaseStorageService` centraliza as operações relacionadas às imagens de receitas, enquanto o serviço de perfil realiza as operações relacionadas ao avatar.
 
 ---
 
@@ -609,6 +605,7 @@ lib/
 ├── screens/
 │   ├── cadastro/
 │   ├── configuracoes/
+│   ├── curtidas/
 │   ├── detalhes_receita/
 │   ├── favoritos/
 │   ├── home/
@@ -617,6 +614,7 @@ lib/
 │   ├── perfil/
 │   ├── receitas/
 │   ├── redefinir_senha/
+│   ├── seguindo/
 │   └── ...
 │
 ├── services/
@@ -959,16 +957,18 @@ O aplicativo também poderá estabelecer parcerias com:
 
 # 🔄 Próximas etapas
 
-O NutriGo já possui sua estrutura principal integrada ao Supabase, incluindo autenticação, gerenciamento de sessão, recuperação e alteração de senha, perfis, receitas, imagens, favoritos, coleções, preferências do usuário e políticas de segurança.
+O NutriGo já possui sua estrutura principal integrada ao Supabase, incluindo autenticação por e-mail e Google, gerenciamento de sessão, recuperação e alteração de senha, perfis, avatares, receitas, imagens, favoritos, curtidas recebidas, coleções, preferências do usuário, seguidores/seguindo e políticas de segurança.
+
+O fluxo de seguir e deixar de seguir usuários e a consulta de Seguidores/Seguindo já foram implementados e validados com diferentes contas.
 
 Nesta etapa, o desenvolvimento encontra-se em fase de revisão, validação e preparação da entrega.
 
 As próximas atividades incluem:
 
-### 👥 Recursos sociais
+### 🔐 Integrações de autenticação
 
-- Finalizar e validar o fluxo de seguir e deixar de seguir outros usuários;
-- Validar o comportamento dos relacionamentos utilizando diferentes contas.
+- Manter a autenticação com Google validada;
+- Avaliar a configuração definitiva do login com Apple quando estiverem disponíveis as credenciais necessárias do Apple Developer Program.
 
 ### 🎨 Interface e experiência
 
