@@ -106,6 +106,44 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _fazerLoginComGoogle() async {
+    if (_carregando) return;
+
+    setState(() {
+      _carregando = true;
+    });
+
+    try {
+      await _authService.fazerLoginComGoogle();
+    } on AuthException catch (e) {
+      debugPrint('ERRO NO LOGIN COM GOOGLE: ${e.message}');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+        ),
+      );
+    } catch (e) {
+      debugPrint('ERRO NO LOGIN COM GOOGLE: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível entrar com o Google.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _carregando = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -446,9 +484,7 @@ class _LoginPageState extends State<LoginPage> {
           width: double.infinity,
           height: 40,
           child: OutlinedButton.icon(
-            onPressed: () {
-              // Login com Google será implementado depois
-            },
+            onPressed: _carregando ? null : _fazerLoginComGoogle,
             icon: Icon(
               Icons.g_mobiledata,
               size: 20,

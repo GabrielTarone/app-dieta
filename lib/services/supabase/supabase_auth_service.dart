@@ -37,6 +37,14 @@ class SupabaseAuthService implements AuthService {
     );
   }
 
+  @override
+  Future<void> fazerLoginComGoogle() async {
+    await _client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: 'io.supabase.nutrigo://login-callback',
+    );
+  }
+
   Future<void> recuperarSenha({
     required String email,
   }) async {

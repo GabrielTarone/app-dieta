@@ -87,4 +87,32 @@ class SupabaseFavoriteService {
 
     await consulta;
   }
+
+  // Lista as receitas do usuário atual que receberam curtidas.
+  Future<List<Map<String, dynamic>>>
+      listarMinhasReceitasCurtidas() async {
+    final resultado = await _client.rpc(
+      'get_my_liked_recipes',
+    );
+
+    return List<Map<String, dynamic>>.from(
+      resultado as List,
+    );
+  }
+
+  // Lista os usuários que curtiram uma receita do usuário atual.
+  Future<List<Map<String, dynamic>>> listarQuemCurtiu(
+    String recipeId,
+  ) async {
+    final resultado = await _client.rpc(
+      'get_recipe_likers',
+      params: {
+        'p_recipe_id': recipeId,
+      },
+    );
+
+    return List<Map<String, dynamic>>.from(
+      resultado as List,
+    );
+  }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../../services/supabase/supabase_profile_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/recipe.dart';
 import '../configuracoes/configuracoes_page.dart';
@@ -10,6 +12,8 @@ import '../notificacoes/notificacoes_page.dart';
 import '../ajuda_suporte/ajuda_suporte_page.dart';
 import '../favoritos/favoritos_page.dart';
 import '../../services/supabase/supabase_auth_service.dart';
+import '../seguindo/seguindo_page.dart';
+import '../curtidas/curtidas_recebidas_page.dart';
 
 class PerfilPage extends StatefulWidget {
   final List<Recipe> favoritos;
@@ -44,6 +48,14 @@ class _PerfilPageState extends State<PerfilPage> {
   int _totalCurtidasRecebidas = 0;
   int _totalSeguindo = 0;
 
+  final SupabaseProfileService _profileService =
+      SupabaseProfileService();
+
+  final ImagePicker _imagePicker = ImagePicker();
+
+  String? _avatarUrl;
+  bool _alterandoAvatar = false;
+
   int get _totalPontos {
     final pontosReceitas = widget.minhasReceitas.length * 100;
     final pontosCurtidas = _totalCurtidasRecebidas * 10;
@@ -69,6 +81,7 @@ class _PerfilPageState extends State<PerfilPage> {
     _emailUsuario = usuario?.email ?? '';
 
     _carregarPerfil();
+    _carregarAvatar();
     _carregarCurtidasRecebidas();
     _carregarTotalSeguindo();
   }
@@ -92,6 +105,228 @@ class _PerfilPageState extends State<PerfilPage> {
       });
     } catch (e) {
       debugPrint('ERRO AO CARREGAR PERFIL: $e');
+    }
+  }
+
+  Future<void> _carregarAvatar() async {
+    try {
+      final avatarUrl =
+          await _profileService.buscarAvatarUsuarioAtual();
+
+      if (!mounted) return;
+
+      setState(() {
+        _avatarUrl = avatarUrl;
+      });
+    } catch (e) {
+      debugPrint('ERRO AO CARREGAR AVATAR: $e');
+    }
+  }
+
+  Future<void> _selecionarAvatar() async {
+    if (_alterandoAvatar) return;
+
+    try {
+      final imagem = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1200,
+        maxHeight: 1200,
+      );
+
+      if (imagem == null) return;
+
+      final extensao =
+          imagem.name.split('.').last.toLowerCase();
+
+      if (!['jpg', 'jpeg', 'png', 'webp'].contains(extensao)) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Escolha uma imagem JPG, PNG ou WebP.',
+            ),
+          ),
+        );
+
+        return;
+      }
+
+      final bytes = await imagem.readAsBytes();
+
+      if (bytes.length > 5 * 1024 * 1024) {
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'A imagem deve ter no máximo 5 MB.',
+            ),
+          ),
+        );
+
+        return;
+      }
+
+      setState(() {
+        _alterandoAvatar = true;
+      });
+
+      final novaUrl = await _profileService.atualizarAvatar(
+        imagemBytes: bytes,
+        extensao: extensao,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _avatarUrl = novaUrl;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Foto de perfil atualizada!'),
+        ),
+      );
+    } catch (e) {
+      debugPrint('ERRO AO ALTERAR AVATAR: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível atualizar a foto.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _alterandoAvatar = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _abrirOpcoesAvatar() async {
+    if (_alterandoAvatar) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTheme.spacingMd,
+              12,
+              AppTheme.spacingMd,
+              AppTheme.spacingLg,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurfaceVariant,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+
+                const SizedBox(height: AppTheme.spacingMd),
+
+                Text(
+                  'Foto de perfil',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+
+                const SizedBox(height: AppTheme.spacingMd),
+
+                ListTile(
+                  leading: const Icon(
+                    Icons.photo_library_outlined,
+                  ),
+                  title: Text(
+                    _avatarUrl == null
+                        ? 'Escolher foto'
+                        : 'Trocar foto',
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _selecionarAvatar();
+                  },
+                ),
+
+                if (_avatarUrl != null)
+                  ListTile(
+                    leading: const Icon(
+                      Icons.delete_outline,
+                    ),
+                    title: const Text('Remover foto'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _removerAvatar();
+                    },
+                  ),
+
+                const SizedBox(height: AppTheme.spacingSm),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _removerAvatar() async {
+    if (_alterandoAvatar) return;
+
+    setState(() {
+      _alterandoAvatar = true;
+    });
+
+    try {
+      await _profileService.removerAvatar();
+
+      if (!mounted) return;
+
+      setState(() {
+        _avatarUrl = null;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Foto de perfil removida.'),
+        ),
+      );
+    } catch (e) {
+      debugPrint('ERRO AO REMOVER AVATAR: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Não foi possível remover a foto.',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _alterandoAvatar = false;
+        });
+      }
     }
   }
 
@@ -191,21 +426,67 @@ class _PerfilPageState extends State<PerfilPage> {
 
         Transform.translate(
           offset: const Offset(0, -45),
-          child: Container(
-            width: 100,
-            height: 100,
-            padding: const EdgeInsets.all(4),
-            decoration: const BoxDecoration(
-              color: AppTheme.verdePrincipal,
-              shape: BoxShape.circle,
-            ),
-            child: ClipOval(
-              child: Image.asset(
-                'assets/images/Imagem Avatar.png',
-                width: 92,
-                height: 92,
-                fit: BoxFit.cover,
-              ),
+          child: GestureDetector(
+            onTap: _alterandoAvatar
+                ? null
+                : _abrirOpcoesAvatar,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 100,
+                  height: 100,
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.verdePrincipal,
+                    shape: BoxShape.circle,
+                  ),
+                  child: ClipOval(
+                    child: _alterandoAvatar
+                        ? const Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        : _avatarUrl != null
+                            ? Image.network(
+                                _avatarUrl!,
+                                width: 92,
+                                height: 92,
+                                fit: BoxFit.cover,
+                                errorBuilder: (
+                                  context,
+                                  error,
+                                  stackTrace,
+                                ) {
+                                  return _buildAvatarPadrao();
+                                },
+                              )
+                            : _buildAvatarPadrao(),
+                  ),
+                ),
+
+                Positioned(
+                  right: -2,
+                  bottom: -2,
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppTheme.verdePrincipal,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Theme.of(context)
+                            .scaffoldBackgroundColor,
+                        width: 2,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.camera_alt_outlined,
+                      size: 17,
+                      color: AppTheme.branco,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -257,20 +538,76 @@ class _PerfilPageState extends State<PerfilPage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        _buildStat(
-          context,
-          value: widget.minhasReceitas.length.toString(),
-          label: 'Receitas',
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MinhasReceitasPage(
+                  favoritos: widget.favoritos,
+                  onFavoriteTap: widget.onFavoriteTap,
+                  minhasReceitas: widget.minhasReceitas,
+                  onAdicionarMinhaReceita:
+                      widget.onAdicionarMinhaReceita,
+                  onRemoverMinhaReceita:
+                      widget.onRemoverMinhaReceita,
+                  onEditarMinhaReceita:
+                      widget.onEditarMinhaReceita,
+                ),
+              ),
+            );
+
+            if (!mounted) return;
+
+            setState(() {});
+          },
+          child: _buildStat(
+            context,
+            value: widget.minhasReceitas.length.toString(),
+            label: 'Receitas',
+          ),
         ),
-        _buildStat(
-          context,
-          value: _totalCurtidasRecebidas.toString(),
-          label: 'Curtidas',
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) =>
+                    const CurtidasRecebidasPage(),
+              ),
+            );
+
+            if (!mounted) return;
+
+            await _carregarCurtidasRecebidas();
+          },
+          child: _buildStat(
+            context,
+            value: _totalCurtidasRecebidas.toString(),
+            label: 'Curtidas',
+          ),
         ),
-        _buildStat(
-          context,
-          value: _totalSeguindo.toString(),
-          label: 'Seguindo',
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const SeguindoPage(),
+              ),
+            );
+
+            if (!mounted) return;
+
+            await _carregarTotalSeguindo();
+          },
+          child: _buildStat(
+            context,
+            value: _totalSeguindo.toString(),
+            label: 'Seguindo',
+          ),
         ),
       ],
     );
@@ -449,6 +786,20 @@ class _PerfilPageState extends State<PerfilPage> {
               ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildAvatarPadrao() {
+    return Container(
+      color: Theme.of(context).colorScheme.surface,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.person,
+        size: 58,
+        color: Theme.of(context)
+            .colorScheme
+            .onSurfaceVariant,
       ),
     );
   }

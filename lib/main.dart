@@ -53,13 +53,29 @@ class MyAppState extends State<MyApp> {
       _authStateChanges = Supabase.instance.client.auth.onAuthStateChange;
 
       _authSubscription = _authStateChanges.listen((data) {
-
         if (data.event == AuthChangeEvent.passwordRecovery) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             navigatorKey.currentState?.push(
               MaterialPageRoute(
                 builder: (context) => const RedefinirSenhaPage(),
               ),
+            );
+          });
+
+          return;
+        }
+
+        if (data.event == AuthChangeEvent.signedIn) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final navigator = navigatorKey.currentState;
+
+            if (navigator == null) return;
+
+            navigator.pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => const MainScreen(),
+              ),
+              (route) => false,
             );
           });
         }

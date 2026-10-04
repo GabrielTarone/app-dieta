@@ -10,5 +10,7 @@ abstract interface class AuthService {
     required String senha,
   });
 
+  Future<void> fazerLoginComGoogle();
+
   Future<void> sair();
 }
