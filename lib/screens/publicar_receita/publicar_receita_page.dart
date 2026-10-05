@@ -38,6 +38,9 @@ class _PublicarReceitaPageState
   final TextEditingController _caloriasController =
       TextEditingController();
 
+  final TextEditingController _porcoesController =
+      TextEditingController();
+
   String _dificuldade = 'Fácil';
 
   final List<String> _dietasSelecionadas = [];
@@ -71,6 +74,9 @@ class _PublicarReceitaPageState
 
       _caloriasController.text =
           receita.caloriesValue.toString();
+
+      _porcoesController.text =
+          receita.servings.toString();
 
       _dificuldade = receita.difficulty;
 
@@ -115,6 +121,7 @@ class _PublicarReceitaPageState
     _nomeController.dispose();
     _tempoController.dispose();
     _caloriasController.dispose();
+    _porcoesController.dispose();
 
     for (final controller
         in _ingredientesControllers) {
@@ -152,18 +159,15 @@ class _PublicarReceitaPageState
   }
 
   void _continuar() {
-    final nome =
-        _nomeController.text.trim();
-
-    final tempo =
-        _tempoController.text.trim();
-
-    final calorias =
-        _caloriasController.text.trim();
+    final nome = _nomeController.text.trim();
+    final tempo = _tempoController.text.trim();
+    final calorias = _caloriasController.text.trim();
+    final porcoes = _porcoesController.text.trim();
 
     if (nome.isEmpty ||
         tempo.isEmpty ||
-        calorias.isEmpty) {
+        calorias.isEmpty ||
+        porcoes.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -175,12 +179,31 @@ class _PublicarReceitaPageState
       return;
     }
 
-    if (int.tryParse(tempo) == null ||
-        int.tryParse(calorias) == null) {
+    final tempoNumero = int.tryParse(tempo);
+    final caloriasNumero = int.tryParse(calorias);
+    final porcoesNumero = int.tryParse(porcoes);
+
+    if (tempoNumero == null ||
+        caloriasNumero == null ||
+        porcoesNumero == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'Tempo e calorias precisam ser números',
+            'Tempo, calorias e porções precisam ser números',
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    if (tempoNumero <= 0 ||
+        caloriasNumero < 0 ||
+        porcoesNumero <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Informe valores válidos para tempo, calorias e porções',
           ),
         ),
       );
@@ -314,6 +337,10 @@ class _PublicarReceitaPageState
       _caloriasController.text.trim(),
     );
 
+    final porcoes = int.parse(
+      _porcoesController.text.trim(),
+    );
+
     final receita = Recipe(
       id: widget.receitaParaEditar?.id,
       userId: widget.receitaParaEditar?.userId,
@@ -329,6 +356,7 @@ class _PublicarReceitaPageState
       difficulty: _dificuldade,
       calories: '$calorias kcal',
       caloriesValue: calorias,
+      servings: porcoes,
       diets: List.from(
         _dietasSelecionadas,
       ),
@@ -730,12 +758,34 @@ class _PublicarReceitaPageState
 
           TextField(
             controller: _caloriasController,
-            keyboardType:
-                TextInputType.number,
+            keyboardType: TextInputType.number,
             decoration: _inputDecoration(
               context,
               hintText: 'Ex: 350',
               suffixText: 'kcal',
+            ),
+          ),
+
+          const SizedBox(
+            height: AppTheme.spacingLg,
+          ),
+
+          _buildLabel(
+            context,
+            'Quantidade de porções',
+          ),
+
+          const SizedBox(
+            height: AppTheme.spacingSm,
+          ),
+
+          TextField(
+            controller: _porcoesController,
+            keyboardType: TextInputType.number,
+            decoration: _inputDecoration(
+              context,
+              hintText: 'Ex: 4',
+              suffixText: 'porções',
             ),
           ),
 

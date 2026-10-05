@@ -320,6 +320,7 @@ class _MainScreenState extends State<MainScreen> {
         difficulty: receitaEditada.difficulty,
         calories: receitaEditada.calories,
         caloriesValue: receitaEditada.caloriesValue,
+        servings: receitaEditada.servings,
         diets: receitaEditada.diets,
         ingredients: receitaEditada.ingredients,
         preparation: receitaEditada.preparation,

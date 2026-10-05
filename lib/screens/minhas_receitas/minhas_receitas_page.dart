@@ -88,6 +88,7 @@ class _MinhasReceitasPageState
         difficulty: novaReceita.difficulty,
         calories: novaReceita.calories,
         caloriesValue: novaReceita.caloriesValue,
+        servings: novaReceita.servings,
         diets: novaReceita.diets,
         ingredients: novaReceita.ingredients,
         preparation: novaReceita.preparation,

@@ -103,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
           _carregando = false;
         });
       }
-    }
+    } 
   }
 
   Future<void> _fazerLoginComGoogle() async {
@@ -162,7 +162,9 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 32),
+                    SizedBox(
+                      height: MediaQuery.sizeOf(context).height * 0.12,
+                    ),
 
                     _buildLogo(context),
 
@@ -492,37 +494,6 @@ class _LoginPageState extends State<LoginPage> {
             ),
             label: Text(
               'Continuar com Google',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.onSurface,
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.outline,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-        ),
-
-        const SizedBox(height: AppTheme.spacingSm),
-
-        SizedBox(
-          width: double.infinity,
-          height: 40,
-          child: OutlinedButton.icon(
-            onPressed: () {
-              // Login com Apple será implementado depois
-            },
-            icon: Icon(
-              Icons.apple,
-              size: 20,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
-            label: Text(
-              'Continuar com Apple',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             style: OutlinedButton.styleFrom(

@@ -279,68 +279,78 @@ class _HomePageState extends State<HomePage> {
   Widget _buildCategories(
     BuildContext context,
   ) {
-    return Row(
-      mainAxisAlignment:
-          MainAxisAlignment.spaceBetween,
-      children: [
-        _buildCategoryItem(
-          context,
-          icon: Icons.eco_outlined,
-          label: 'Saudáveis',
-          onTap: () {
-            widget.onCategoryTap(
-              'Saudáveis',
-            );
-          },
-        ),
+    return Transform.translate(
+      offset: const Offset(-8, 0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        child: Row(
+          children: [
+            _buildCategoryItem(
+              context,
+              icon: Icons.eco_outlined,
+              label: 'Saudáveis',
+              onTap: () {
+                widget.onCategoryTap(
+                  'Saudáveis',
+                );
+              },
+            ),
 
-        _buildCategoryItem(
-          context,
-          icon:
-              Icons.free_breakfast_outlined,
-          label: 'Café da\nmanhã',
-          onTap: () {
-            widget.onCategoryTap(
-              'Café da manhã',
-            );
-          },
-        ),
+            const SizedBox(width: 10),
 
-        _buildCategoryItem(
-          context,
-          icon:
-              Icons.lunch_dining_outlined,
-          label: 'Almoço',
-          onTap: () {
-            widget.onCategoryTap(
-              'Almoço',
-            );
-          },
-        ),
+            _buildCategoryItem(
+              context,
+              icon: Icons.free_breakfast_outlined,
+              label: 'Café da manhã',
+              onTap: () {
+                widget.onCategoryTap(
+                  'Café da manhã',
+                );
+              },
+            ),
 
-        _buildCategoryItem(
-          context,
-          icon: Icons.cookie_outlined,
-          label: 'Lanches',
-          onTap: () {
-            widget.onCategoryTap(
-              'Lanches',
-            );
-          },
-        ),
+            const SizedBox(width: 10),
 
-        _buildCategoryItem(
-          context,
-          icon:
-              Icons.dinner_dining_outlined,
-          label: 'Jantar',
-          onTap: () {
-            widget.onCategoryTap(
-              'Jantar',
-            );
-          },
+            _buildCategoryItem(
+              context,
+              icon: Icons.lunch_dining_outlined,
+              label: 'Almoço',
+              onTap: () {
+                widget.onCategoryTap(
+                  'Almoço',
+                );
+              },
+            ),
+
+            const SizedBox(width: 10),
+
+            _buildCategoryItem(
+              context,
+              icon: Icons.cookie_outlined,
+              label: 'Lanches',
+              onTap: () {
+                widget.onCategoryTap(
+                  'Lanches',
+                );
+              },
+            ),
+
+            const SizedBox(width: 10),
+
+            _buildCategoryItem(
+              context,
+              icon: Icons.dinner_dining_outlined,
+              label: 'Jantar',
+              onTap: () {
+                widget.onCategoryTap(
+                  'Jantar',
+                );
+              },
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -353,41 +363,50 @@ class _HomePageState extends State<HomePage> {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Column(
-        children: [
-          Container(
-            width: 51,
-            height: 51,
-            decoration: BoxDecoration(
-              color: Theme.of(context)
-                  .colorScheme
-                  .surface,
-              borderRadius:
-                  BorderRadius.circular(16),
+      child: SizedBox(
+        width: 68,
+        child: Column(
+          children: [
+            Container(
+              width: 51,
+              height: 51,
+              decoration: BoxDecoration(
+                color: Theme.of(context)
+                    .colorScheme
+                    .surface,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                icon,
+                color: AppTheme.verdePrincipal,
+                size: 24,
+              ),
             ),
-            child: Icon(
-              icon,
-              color:
-                  AppTheme.verdePrincipal,
-              size: 24,
-            ),
-          ),
 
-          const SizedBox(
-            height: AppTheme.spacingSm,
-          ),
-
-          SizedBox(
-            width: 55,
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium,
+            const SizedBox(
+              height: AppTheme.spacingSm,
             ),
-          ),
-        ],
+
+            SizedBox(
+              height: 38,
+              child: Center(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(
+                        fontSize: 13,
+                        height: 1.2,
+                      ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

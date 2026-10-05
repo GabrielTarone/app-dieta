@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../models/recipe.dart';
 import '../recipe_service.dart';
@@ -19,6 +20,7 @@ class SupabaseRecipeService implements RecipeService {
       difficulty: dados['difficulty'] as String,
       calories: dados['calories'] as String,
       caloriesValue: dados['calories_value'] as int,
+      servings: (dados['servings'] as num?)?.toInt() ?? 1,
       diets: List<String>.from(dados['diets'] ?? []),
       ingredients: List<String>.from(dados['ingredients'] ?? []),
       preparation: List<String>.from(dados['preparation'] ?? []),
@@ -36,6 +38,7 @@ class SupabaseRecipeService implements RecipeService {
       'difficulty': receita.difficulty,
       'calories': receita.calories,
       'calories_value': receita.caloriesValue,
+      'servings': receita.servings,
       'diets': receita.diets,
       'ingredients': receita.ingredients,
       'preparation': receita.preparation,
@@ -56,17 +59,29 @@ class SupabaseRecipeService implements RecipeService {
   // CRIAR: associa a receita ao usuário autenticado.
   @override
   Future<void> criarReceita(Recipe receita) async {
-    final usuario = _client.auth.currentUser;
+  final usuario = _client.auth.currentUser;
 
-    if (usuario == null) {
-      throw Exception('É necessário estar autenticado.');
-    }
-
-    await _client.from('recipes').insert({
-      ..._toMap(receita),
-      'user_id': usuario.id,
-    });
+  if (usuario == null) {
+    throw Exception('É necessário estar autenticado.');
   }
+
+  final dados = {
+    ..._toMap(receita),
+    'user_id': usuario.id,
+  };
+
+  final resposta = await _client
+      .from('recipes')
+      .insert(dados)
+      .select('id, title, servings')
+      .single();
+
+  debugPrint(
+    'DEBUG SUPABASE RESPOSTA → '
+    'title=${resposta['title']} | '
+    'servings=${resposta['servings']}',
+  );
+}
 
   // ATUALIZAR: modifica uma receita existente.
   @override

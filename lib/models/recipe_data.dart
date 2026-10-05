@@ -9,6 +9,7 @@ const Recipe panqueca = Recipe(
   difficulty: 'Fácil',
   calories: '320 kcal',
   caloriesValue: 320,
+  servings: 1,
   diets: [
     'Vegetariana',
   ],
@@ -36,6 +37,7 @@ const Recipe frango = Recipe(
   difficulty: 'Médio',
   calories: '410 kcal',
   caloriesValue: 410,
+  servings: 1,
   diets: [
     'Sem glúten',
   ],
@@ -64,6 +66,7 @@ const Recipe sanduiche = Recipe(
   difficulty: 'Fácil',
   calories: '280 kcal',
   caloriesValue: 280,
+  servings: 1,
   diets: [
     'Sem lactose',
   ],
@@ -94,6 +97,7 @@ const Recipe smoothieVerde = Recipe(
   difficulty: 'Fácil',
   calories: '180 kcal',
   caloriesValue: 180,
+  servings: 1,
   diets: [
     'Vegetariana',
     'Sem glúten',
@@ -120,8 +124,9 @@ const Recipe bowlFrangoQuinoa = Recipe(
   time: '35 min',
   timeMinutes: 35,
   difficulty: 'Médio',
-  calories: '450 kcal',
-  caloriesValue: 450,
+  calories: '380 kcal',
+  caloriesValue: 380,
+  servings: 4,
   diets: [
     'Sem glúten',
   ],
@@ -152,6 +157,7 @@ const Recipe saladaMediterranea = Recipe(
   difficulty: 'Fácil',
   calories: '250 kcal',
   caloriesValue: 250,
+  servings: 2,
   diets: [
     'Vegetariana',
     'Sem glúten',
@@ -183,6 +189,7 @@ const Recipe omeleteLegumes = Recipe(
   difficulty: 'Fácil',
   calories: '290 kcal',
   caloriesValue: 290,
+  servings: 1,
   diets: [
     'Vegetariana',
     'Sem glúten',

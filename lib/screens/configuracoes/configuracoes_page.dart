@@ -623,10 +623,8 @@ class _ConfiguracoesPageState
     final preferencias = [
       'Vegetariana',
       'Vegana',
-      'Sem lactose',
       'Sem glúten',
-      'Low carb',
-      'Saudável',
+      'Sem lactose',
     ];
 
     final preferenciasSelecionadas =

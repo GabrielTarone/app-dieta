@@ -547,15 +547,34 @@ ${_recipe.preparation.asMap().entries.map(
   Widget _buildIngredients(
     BuildContext context,
   ) {
+    final textoPorcoes = _recipe.servings == 1
+        ? '1 porção'
+        : '${_recipe.servings} porções';
+
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Ingredientes',
-          style: Theme.of(context)
-              .textTheme
-              .headlineMedium,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Ingredientes',
+                style: Theme.of(context)
+                    .textTheme
+                    .headlineMedium,
+              ),
+            ),
+            Text(
+              textoPorcoes,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(
+                    color: AppTheme.verdePrincipal,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ],
         ),
 
         const SizedBox(
