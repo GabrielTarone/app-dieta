@@ -1,4 +1,4 @@
-## 👥 Integrantes e responsabilidades
+# 👥 Integrantes e responsabilidades
 
 | Integrante | RM | Responsabilidades |
 | ---------- | -- | ----------------- |
@@ -14,7 +14,7 @@
 
 O **NutriGo** é um aplicativo desenvolvido em Flutter voltado para pessoas que desejam melhorar sua alimentação de forma simples, prática e social.
 
-A plataforma combina **descoberta e compartilhamento de receitas, organização de favoritos e acompanhamento do usuário**, criando uma experiência em que as pessoas podem encontrar inspiração para suas refeições e compartilhar suas próprias receitas.
+A plataforma combina **descoberta e compartilhamento de receitas, organização de favoritos, coleções e interação entre usuários**, criando uma experiência em que as pessoas podem encontrar inspiração para suas refeições, compartilhar suas próprias receitas e interagir com outros usuários.
 
 ---
 
@@ -26,7 +26,7 @@ Manter uma alimentação equilibrada pode ser difícil. Muitas pessoas têm vont
 
 O **NutriGo** busca tornar esse processo mais acessível ao reunir receitas, organização e interação em uma única aplicação.
 
-Em vez de apenas oferecer informações sobre dieta, o aplicativo busca criar uma experiência na qual os usuários possam descobrir receitas, publicar suas próprias opções, organizar seus favoritos e encontrar inspiração para suas refeições.
+Em vez de apenas oferecer informações sobre dieta, o aplicativo busca criar uma experiência na qual os usuários possam descobrir receitas, publicar suas próprias opções, organizar seus favoritos e coleções e encontrar inspiração para suas refeições.
 
 ---
 
@@ -44,19 +44,20 @@ O aplicativo é destinado principalmente a:
 
 # 🚀 Status atual do projeto
 
-O NutriGo encontra-se em desenvolvimento como aplicativo **Flutter/Dart**, com integração ao **Supabase** para autenticação, gerenciamento de usuários, persistência de receitas, armazenamento de imagens, favoritos e coleções.
+O NutriGo encontra-se em sua etapa final de desenvolvimento como aplicativo **Flutter/Dart**, com integração ao **Supabase** para autenticação, gerenciamento de usuários, persistência de receitas, armazenamento de imagens, favoritos, coleções, relacionamentos sociais e notificações.
 
-O projeto já possui as seguintes funcionalidades implementadas:
+O projeto possui as seguintes funcionalidades implementadas:
 
 - **Autenticação:** cadastro, login com e-mail e senha, login com Google, recuperação e alteração de senha, além do gerenciamento de sessão por meio do Supabase Auth.
 - **Perfis e configurações:** carregamento e edição das informações do usuário, foto de perfil, preferências alimentares e configuração de notificações, com persistência dos dados no Supabase.
-- **Receitas:** cadastro, consulta, edição e exclusão de receitas, com persistência no Supabase.
+- **Receitas:** cadastro, consulta, edição e exclusão de receitas, incluindo informações como categoria, tempo, dificuldade, calorias e quantidade de porções.
 - **Imagens:** envio, substituição e exclusão de fotografias de receitas e avatares utilizando Supabase Storage.
 - **Favoritos e curtidas:** adição e remoção de receitas favoritas, contabilização das curtidas recebidas nas próprias receitas e identificação dos usuários que curtiram.
 - **Coleções:** criação, consulta, edição e exclusão de coleções personalizadas de receitas, com persistência por usuário no Supabase.
 - **Sessão do usuário:** restauração automática da sessão autenticada, permitindo que o usuário retorne ao aplicativo sem realizar um novo login enquanto a sessão permanecer válida.
 - **Perfil e progresso:** exibição dinâmica de receitas publicadas, curtidas recebidas, usuários seguidos, nível e pontuação, com acesso às informações pelas estatísticas do perfil.
 - **Relacionamentos entre usuários:** seguir e deixar de seguir usuários, consulta de seguidores e de usuários seguidos e tela de Conexões, com controle de segurança por RLS.
+- **Notificações:** notificações de novos seguidores e curtidas recebidas em receitas, com controle de leitura e preferência de ativação ou desativação.
 - **Tratamento de carregamento:** exibição de indicador durante o carregamento dos dados e tratamento de falhas com opção de nova tentativa.
 - **Segurança:** utilização de políticas Row Level Security (RLS) para controlar o acesso aos dados e arquivos.
 - **Integridade dos dados:** utilização de chaves estrangeiras e restrições de unicidade para evitar registros duplicados em favoritos, relacionamentos entre usuários e vínculos entre receitas e coleções.
@@ -64,10 +65,9 @@ O projeto já possui as seguintes funcionalidades implementadas:
 
 O aplicativo combina receitas demonstrativas com receitas cadastradas no banco de dados.
 
-As funcionalidades de persistência de receitas, gerenciamento de imagens, favoritos, coleções, preferências alimentares e configurações de notificações foram implementadas e testadas.
+As funcionalidades principais do MVP encontram-se implementadas e integradas ao backend Supabase.
 
-O projeto continua em evolução, com melhorias e funcionalidades adicionais previstas para as próximas etapas.
-
+A validação estática do projeto foi realizada com `flutter analyze`, sem problemas identificados. O projeto encontra-se na etapa final de preparação para o **Checkpoint 6**, restando a geração e a validação do APK Android em modo release.
 
 ---
 
@@ -104,7 +104,7 @@ O projeto continua em evolução, com melhorias e funcionalidades adicionais pre
 - Alteração de senha pelo usuário autenticado na tela de Configurações;
 - Validação da nova senha e confirmação antes da atualização;
 - Configuração das preferências alimentares do usuário;
-- Seleção de múltiplas preferências, como vegetariana, vegana, sem lactose, sem glúten, low carb e saudável;
+- Seleção de múltiplas preferências, como vegetariana, vegana, sem glúten e sem lactose;
 - Persistência das preferências alimentares no perfil do usuário no Supabase PostgreSQL;
 - Recuperação automática das preferências alimentares salvas;
 - Ativação e desativação das notificações pela tela de Configurações;
@@ -120,6 +120,8 @@ O projeto continua em evolução, com melhorias e funcionalidades adicionais pre
 - Sistema de pontuação baseado na atividade do usuário;
 - Exibição dinâmica do nível do usuário de acordo com sua pontuação.
 
+---
+
 ## 🍳 Receitas
 
 O NutriGo permite consultar e gerenciar receitas, utilizando o **Supabase PostgreSQL** para armazenar as receitas publicadas.
@@ -132,7 +134,7 @@ Funcionalidades implementadas:
 - Filtros por categorias;
 - Publicação de novas receitas;
 - Cadastro de ingredientes e modo de preparo;
-- Informações de tempo, dificuldade, calorias e categorias alimentares;
+- Informações de tempo, dificuldade, calorias, quantidade de porções e categorias alimentares;
 - Visualização das receitas publicadas pelo próprio usuário;
 - Edição de receitas existentes;
 - Exclusão de receitas publicadas pelo usuário;
@@ -155,6 +157,8 @@ O aplicativo permite:
 
 As operações de armazenamento utilizam políticas de segurança para restringir as alterações aos arquivos pertencentes ao usuário autenticado.
 
+---
+
 ## ❤️ Favoritos
 
 O NutriGo possui um sistema de favoritos com **persistência no Supabase**, permitindo que cada usuário mantenha suas receitas favoritas mesmo após fechar e abrir novamente o aplicativo.
@@ -174,6 +178,8 @@ Funcionalidades implementadas:
 A tabela `favorites` utiliza `recipe_id` para receitas persistidas no banco e `demo_recipe_key` para identificar receitas demonstrativas.
 
 As políticas RLS restringem a consulta, a inclusão e a remoção dos registros de favoritos ao usuário correspondente.
+
+---
 
 ## 📁 Coleções
 
@@ -199,6 +205,8 @@ Para receitas cadastradas no Supabase, a relação utiliza `recipe_id`. Para rec
 
 As tabelas utilizam políticas de **Row Level Security (RLS)** para restringir o acesso às coleções pertencentes ao usuário autenticado.
 
+---
+
 ## 👥 Relacionamentos entre usuários
 
 O NutriGo possui recursos sociais persistidos por meio da tabela `follows` no Supabase PostgreSQL.
@@ -223,20 +231,48 @@ As regras de integridade impedem que um usuário siga a si mesmo e evitam que o 
 
 As políticas de Row Level Security (RLS) controlam a criação, consulta e remoção dos relacionamentos. Os perfis necessários à experiência social podem ser consultados por usuários autenticados, enquanto a criação e a alteração dos dados de perfil permanecem protegidas de acordo com o usuário correspondente.
 
+---
+
+## 🔔 Notificações
+
+O NutriGo possui um sistema de notificações integrado ao Supabase para informar o usuário sobre interações sociais realizadas na plataforma.
+
+Funcionalidades implementadas:
+
+- Notificação quando um novo usuário começa a seguir o perfil;
+- Notificação quando uma receita publicada recebe uma curtida;
+- Identificação do usuário responsável pela interação;
+- Identificação da receita relacionada à curtida;
+- Diferenciação entre notificações lidas e não lidas;
+- Marcação de notificações como lidas;
+- Opção para marcar todas as notificações como lidas;
+- Exibição do tempo relativo da interação;
+- Ativação e desativação das notificações pela tela de Configurações;
+- Persistência da preferência do usuário no Supabase.
+
+A criação das notificações ocorre no banco de dados a partir das interações realizadas no aplicativo. A preferência `notificacoes_ativadas` do perfil é verificada antes da criação de uma nova notificação.
+
+As políticas de Row Level Security (RLS) restringem o acesso às notificações pertencentes ao usuário autenticado.
+
+---
+
 ## 🧭 Navegação
 
 O aplicativo possui navegação entre as principais áreas:
 
 - Home;
-- Receitas;
+- Explorar Receitas;
 - Favoritos;
 - Perfil;
 - Detalhes da receita;
 - Publicação de receita;
+- Edição de receita;
+- Minhas receitas;
+- Coleções;
 - Configurações;
+- Notificações;
 - Conexões, com Seguidores e Seguindo;
-- Curtidas recebidas;
-- Minhas receitas.
+- Curtidas recebidas.
 
 ---
 
@@ -249,6 +285,8 @@ O projeto utiliza as seguintes tecnologias:
 - **Supabase**
 - **PostgreSQL**
 - **Supabase Auth**
+- **Supabase Storage**
+- **Google OAuth**
 - **Row Level Security (RLS)**
 - **flutter_dotenv**
 - **supabase_flutter**
@@ -262,7 +300,7 @@ O desenvolvimento é realizado utilizando o **Visual Studio Code**.
 
 O projeto utiliza o **Supabase** como solução de backend em nuvem.
 
-Atualmente, a integração contempla autenticação, gerenciamento de perfis, persistência de receitas, favoritos e coleções no PostgreSQL, além do armazenamento de imagens no Supabase Storage.
+A integração contempla autenticação, gerenciamento de perfis, persistência de receitas, favoritos, coleções, relacionamentos sociais e notificações no PostgreSQL, além do armazenamento de imagens no Supabase Storage.
 
 ## Autenticação
 
@@ -272,11 +310,9 @@ O aplicativo também possui **login com Google via OAuth**, integrado ao Supabas
 
 Cada usuário possui um identificador único (`UUID`) gerado pelo sistema de autenticação.
 
-> O botão de autenticação com Apple permanece como integração futura, pois sua configuração definitiva depende das credenciais e recursos correspondentes do Apple Developer Program.
-
 ### Recuperação de senha
 
-O aplicativo também possui fluxo de recuperação de senha integrado ao **Supabase Auth**.
+O aplicativo possui fluxo de recuperação de senha integrado ao **Supabase Auth**.
 
 A partir da tela de login, o usuário pode solicitar a recuperação informando o e-mail cadastrado. O Supabase envia um e-mail contendo um link de recuperação.
 
@@ -362,9 +398,9 @@ A criação e a atualização dos dados de perfil permanecem restritas ao usuár
 
 Dessa forma, informações necessárias para recursos como Seguidores, Seguindo e Curtidas podem ser exibidas sem permitir que outro usuário altere os dados de um perfil que não lhe pertence.
 
-Além da tabela `profiles`, o projeto utiliza Row Level Security nas tabelas `recipes`, `favorites`, `collections`, `collection_recipes` e `follows`.
+Além da tabela `profiles`, o projeto utiliza Row Level Security nas tabelas `recipes`, `favorites`, `collections`, `collection_recipes`, `follows` e `notifications`.
 
-As políticas foram configuradas de acordo com a responsabilidade de cada recurso. Receitas podem ser visualizadas pelos usuários autenticados, enquanto operações de criação, edição e exclusão são restritas ao proprietário. Favoritos, coleções e seus vínculos são protegidos de acordo com o usuário autenticado.
+As políticas foram configuradas de acordo com a responsabilidade de cada recurso. Receitas podem ser visualizadas pelos usuários autenticados, enquanto operações de criação, edição e exclusão são restritas ao proprietário. Favoritos, coleções, notificações e seus respectivos vínculos são protegidos de acordo com o usuário autenticado.
 
 Também são utilizadas restrições de unicidade para evitar favoritos duplicados, relacionamentos duplicados entre usuários e a inclusão repetida da mesma receita em uma mesma coleção.
 
@@ -385,6 +421,7 @@ Entre os dados armazenados estão:
 - Tempo de preparo;
 - Dificuldade;
 - Calorias;
+- Quantidade de porções;
 - Ingredientes;
 - Modo de preparo;
 - Categorias alimentares;
@@ -532,6 +569,60 @@ Dessa forma, cada usuário possui acesso apenas às suas próprias coleções e 
 
 ---
 
+## 👥 Tabela `follows`
+
+A tabela `follows` armazena os relacionamentos entre usuários.
+
+Estrutura principal:
+
+```text
+follows
+├── id
+├── follower_id
+├── following_id
+└── created_at
+```
+
+- `follower_id`: identifica o usuário que iniciou o relacionamento;
+- `following_id`: identifica o usuário seguido;
+- `created_at`: registra quando o relacionamento foi criado.
+
+As regras de integridade impedem que um usuário siga a si mesmo e evitam relacionamentos duplicados.
+
+As políticas RLS controlam a consulta, criação e remoção dos relacionamentos de acordo com o usuário autenticado.
+
+---
+
+## 🔔 Tabela `notifications`
+
+A tabela `notifications` armazena notificações relacionadas às interações sociais do aplicativo.
+
+Entre as informações armazenadas estão:
+
+```text
+notifications
+├── id
+├── user_id
+├── actor_id
+├── type
+├── recipe_id
+├── is_read
+└── created_at
+```
+
+Os registros podem representar eventos como:
+
+- Novo seguidor;
+- Curtida recebida em uma receita.
+
+O campo `is_read` permite controlar o estado de leitura da notificação.
+
+A criação das notificações ocorre a partir das interações realizadas no aplicativo e considera a configuração `notificacoes_ativadas` definida pelo usuário.
+
+As políticas RLS restringem o acesso às notificações do próprio usuário.
+
+---
+
 ## 📷 Supabase Storage
 
 O NutriGo utiliza o **Supabase Storage** para armazenar imagens de receitas e fotos de perfil.
@@ -545,7 +636,9 @@ avatars
 
 Os arquivos são organizados em pastas identificadas pelo UUID do usuário autenticado.
 
-O aplicativo permite upload e exibição de imagens JPG, PNG e WebP, substituição e exclusão de imagens de receitas e seleção, alteração e remoção da foto de perfil. As operações de alteração são protegidas por políticas de acesso e organizadas em pastas associadas ao usuário autenticado.
+O aplicativo permite upload e exibição de imagens JPG, PNG e WebP, substituição e exclusão de imagens de receitas e seleção, alteração e remoção da foto de perfil.
+
+As operações de alteração são protegidas por políticas de acesso e organizadas em pastas associadas ao usuário autenticado.
 
 O serviço `SupabaseStorageService` centraliza as operações relacionadas às imagens de receitas, enquanto o serviço de perfil realiza as operações relacionadas ao avatar.
 
@@ -553,7 +646,7 @@ O serviço `SupabaseStorageService` centraliza as operações relacionadas às i
 
 # 🧱 Arquitetura
 
-O projeto utiliza uma separação entre **interface**, **regras de acesso aos dados** e **implementações dos serviços**.
+O projeto utiliza uma separação entre **interface**, **modelos**, **contratos de serviços** e **implementações responsáveis pela comunicação com o Supabase**.
 
 As telas não precisam conhecer diretamente os detalhes de comunicação com o banco.
 
@@ -581,6 +674,20 @@ LoginPage / CadastroPage
 SupabaseAuthService
           ↓
     Supabase Auth
+```
+
+Para receitas:
+
+```text
+Telas de receitas
+       ↓
+ RecipeService
+       ↓
+SupabaseRecipeService
+       ↓
+Supabase PostgreSQL
+       ↓
+     recipes
 ```
 
 Essa estrutura facilita a manutenção e permite substituir ou evoluir a camada de persistência sem concentrar a lógica de banco de dados nas telas.
@@ -611,7 +718,10 @@ lib/
 │   ├── home/
 │   ├── login/
 │   ├── main/
+│   ├── minhas_receitas/
+│   ├── notificacoes/
 │   ├── perfil/
+│   ├── publicar_receita/
 │   ├── receitas/
 │   ├── redefinir_senha/
 │   ├── seguindo/
@@ -630,6 +740,7 @@ lib/
 │       ├── supabase_collection_service.dart
 │       ├── supabase_favorite_service.dart
 │       ├── supabase_follow_service.dart
+│       ├── supabase_notification_service.dart
 │       ├── supabase_profile_service.dart
 │       ├── supabase_recipe_service.dart
 │       └── supabase_storage_service.dart
@@ -638,7 +749,7 @@ lib/
 └── main.dart
 ```
 
-A estrutura continuará sendo expandida conforme novas funcionalidades e integrações forem adicionadas.
+A organização separa as responsabilidades da aplicação, facilitando a manutenção, leitura e evolução do projeto.
 
 ---
 
@@ -674,7 +785,8 @@ Por segurança, o arquivo `.env` real **não é versionado no GitHub** e está i
 - Flutter SDK instalado;
 - Dart;
 - Visual Studio Code ou outra IDE compatível;
-- Git.
+- Git;
+- Dispositivo, emulador ou navegador compatível com Flutter.
 
 Verifique a instalação do Flutter:
 
@@ -743,19 +855,23 @@ Para executar no Chrome:
 flutter run -d chrome
 ```
 
-Também é possível executar em outros dispositivos compatíveis configurados no ambiente Flutter.
+Para executar em um dispositivo Android conectado ou emulador disponível:
+
+```bash
+flutter run
+```
 
 ---
 
 ## 5. Verifique o código
 
-Antes de executar ou enviar alterações ao repositório, recomenda-se utilizar:
+Antes de executar ou enviar alterações ao repositório, utilize:
 
 ```bash
 flutter analyze
 ```
 
-O comando verifica problemas e avisos no código Dart/Flutter.
+Na validação final realizada para o Checkpoint 6, o projeto foi analisado sem problemas identificados.
 
 ---
 
@@ -783,11 +899,13 @@ A identidade visual do NutriGo busca transmitir:
 | --- | --- | --- |
 | Verde principal | `#4CAF6A` | Ações principais e identidade |
 | Verde claro | `#A8D5B2` | Elementos secundários |
-| Creme | `#F5EFE4` | Fundos |
 | Bege | `#E8DCC2` | Fundos secundários e detalhes visuais |
-| Cinza escuro | `#333333` | Textos |
-| Cinza grafite | `#4E4747` | Ícones e texto de ícones |
+| Creme | `#F5F0E7` | Fundos |
 | Branco | `#FFFFFF` | Fundos e contraste |
+| Cinza escuro | `#333333` | Textos |
+| Cinza claro | `#8E8E8E` | Elementos secundários |
+| Texto secundário | `#70766F` | Textos de apoio |
+| Botão secundário | `#86B88E` | Ações secundárias |
 
 A combinação busca transmitir **saúde e naturalidade** por meio dos tons verdes, enquanto os tons neutros ajudam a manter uma interface leve e organizada.
 
@@ -817,36 +935,162 @@ A escolha busca garantir boa legibilidade em dispositivos móveis e proporcionar
 
 # 📱 Interface
 
-As telas do NutriGo seguem a identidade visual definida para o projeto, utilizando a paleta de cores, tipografia e componentes de forma consistente.
+Abaixo estão as principais telas e funcionalidades implementadas na versão final do NutriGo.
+
+## 🔐 Autenticação
 
 <table>
   <tr>
-    <td align="center">
-      <strong>Login</strong><br><br>
-      <img src="./docs/imagens/login.jpeg" width="220">
-    </td>
-    <td align="center">
-      <strong>Home</strong><br><br>
-      <img src="./docs/imagens/home.jpeg" width="220">
-    </td>
-    <td align="center">
-      <strong>Explorar Receitas</strong><br><br>
-      <img src="./docs/imagens/explorar.jpeg" width="220">
-    </td>
+    <th>Login</th>
+    <th>Criar conta</th>
+    <th>Redefinir senha</th>
   </tr>
   <tr>
-    <td align="center">
-      <strong>Detalhes da Receita</strong><br><br>
-      <img src="./docs/imagens/receita.jpeg" width="220">
-    </td>
-    <td align="center">
-      <strong>Favoritos</strong><br><br>
-      <img src="./docs/imagens/favoritos.jpeg" width="220">
-    </td>
-    <td align="center">
-      <strong>Perfil</strong><br><br>
-      <img src="./docs/imagens/perfil.jpeg" width="220">
-    </td>
+    <td><img src="assets/images/login.jpeg" width="250"></td>
+    <td><img src="assets/images/criarConta.jpeg" width="250"></td>
+    <td><img src="assets/images/redefinirSenha.jpeg" width="250"></td>
+  </tr>
+  <tr>
+    <th>Validação de e-mail</th>
+    <th>Validação de e-mail</th>
+    <th>Validação de senha</th>
+  </tr>
+  <tr>
+    <td><img src="assets/images/login-validacao-email.jpeg" width="250"></td>
+    <td><img src="assets/images/login-validacao-email1.jpeg" width="250"></td>
+    <td><img src="assets/images/login-validacao-senha.jpeg" width="250"></td>
+  </tr>
+</table>
+
+---
+
+## 🏠 Home e exploração
+
+<table>
+  <tr>
+    <th>Home</th>
+    <th>Explorar receitas</th>
+    <th>Detalhes da receita</th>
+  </tr>
+  <tr>
+    <td><img src="assets/images/home.jpeg" width="250"></td>
+    <td><img src="assets/images/explorarReceitas.jpeg" width="250"></td>
+    <td><img src="assets/images/detalhesDaReceita.jpeg" width="250"></td>
+  </tr>
+</table>
+
+---
+
+## 🍽️ Publicação e gerenciamento de receitas
+
+<table>
+  <tr>
+    <th>Minhas receitas</th>
+    <th>Publicar receita</th>
+    <th>Informações da receita</th>
+  </tr>
+  <tr>
+    <td><img src="assets/images/minhasReceitas.jpeg" width="250"></td>
+    <td><img src="assets/images/publicarReceita1.jpeg" width="250"></td>
+    <td><img src="assets/images/publicarReceita2.jpeg" width="250"></td>
+  </tr>
+  <tr>
+    <th>Editar receita</th>
+    <th>Compartilhar receita</th>
+    <th>Favoritos</th>
+  </tr>
+  <tr>
+    <td><img src="assets/images/editarReceita.jpeg" width="250"></td>
+    <td><img src="assets/images/CompartilhamentoDeReceita.png" width="250"></td>
+    <td><img src="assets/images/favoritos.jpeg" width="250"></td>
+  </tr>
+</table>
+
+---
+
+## ❤️ Coleções
+
+<table>
+  <tr>
+    <th>Coleções</th>
+    <th>Nova coleção</th>
+    <th>Editar e excluir coleção</th>
+  </tr>
+  <tr>
+    <td><img src="assets/images/colecoes.jpeg" width="250"></td>
+    <td><img src="assets/images/novaColecao.jpeg" width="250"></td>
+    <td><img src="assets/images/colecaoEditarApagar.jpeg" width="250"></td>
+  </tr>
+</table>
+
+---
+
+## 👥 Recursos sociais
+
+<table>
+  <tr>
+    <th>Seguidores</th>
+    <th>Seguindo</th>
+    <th>Notificações</th>
+  </tr>
+  <tr>
+    <td><img src="assets/images/seguidores.jpeg" width="250"></td>
+    <td><img src="assets/images/seguindo.jpeg" width="250"></td>
+    <td><img src="assets/images/notificacoes.jpeg" width="250"></td>
+  </tr>
+</table>
+
+---
+
+## 👤 Perfil
+
+<table>
+  <tr>
+    <th>Perfil</th>
+    <th>Alterar foto de perfil</th>
+    <th>Editar perfil</th>
+  </tr>
+  <tr>
+    <td><img src="assets/images/perfil.jpeg" width="250"></td>
+    <td><img src="assets/images/perfilTrocarImagem.jpeg" width="250"></td>
+    <td><img src="assets/images/configuracoesEditarPerfil.jpeg" width="250"></td>
+  </tr>
+</table>
+
+---
+
+## ⚙️ Configurações
+
+<table>
+  <tr>
+    <th>Configurações</th>
+    <th>Preferências alimentares</th>
+    <th>Tema</th>
+  </tr>
+  <tr>
+    <td><img src="assets/images/configuracoes.jpeg" width="250"></td>
+    <td><img src="assets/images/configuracoesPreferenciasAlimentares.jpeg" width="250"></td>
+    <td><img src="assets/images/configuracoesTema.jpeg" width="250"></td>
+  </tr>
+  <tr>
+    <th>Alterar senha</th>
+    <th>Privacidade</th>
+    <th>Política de privacidade</th>
+  </tr>
+  <tr>
+    <td><img src="assets/images/configuracoesAlterarSenha.jpeg" width="250"></td>
+    <td><img src="assets/images/configuracoesPrivacidade.jpeg" width="250"></td>
+    <td><img src="assets/images/configuracoesPoliticaDePrivacidade.jpeg" width="250"></td>
+  </tr>
+  <tr>
+    <th>Sobre o NutriGo</th>
+    <th>Termos de uso</th>
+    <th>Ajuda e suporte</th>
+  </tr>
+  <tr>
+    <td><img src="assets/images/configuracoesSobre.jpeg" width="250"></td>
+    <td><img src="assets/images/configuracoesTermosDeUso.jpeg" width="250"></td>
+    <td><img src="assets/images/ajudaSuporte.jpeg" width="250"></td>
   </tr>
 </table>
 
@@ -955,46 +1199,75 @@ O aplicativo também poderá estabelecer parcerias com:
 
 ---
 
-# 🔄 Próximas etapas
+# 📚 Aprendizados do grupo
 
-O NutriGo já possui sua estrutura principal integrada ao Supabase, incluindo autenticação por e-mail e Google, gerenciamento de sessão, recuperação e alteração de senha, perfis, avatares, receitas, imagens, favoritos, curtidas recebidas, coleções, preferências do usuário, seguidores/seguindo e políticas de segurança.
+Durante o desenvolvimento do NutriGo, o grupo evoluiu o projeto de um protótipo inicial para uma aplicação Flutter integrada a serviços reais de backend.
 
-O fluxo de seguir e deixar de seguir usuários e a consulta de Seguidores/Seguindo já foram implementados e validados com diferentes contas.
+Entre os principais aprendizados obtidos durante o desenvolvimento estão:
 
-Nesta etapa, o desenvolvimento encontra-se em fase de revisão, validação e preparação da entrega.
+- Estruturação e desenvolvimento de aplicações multiplataforma com Flutter e Dart;
+- Criação de interfaces reutilizáveis e consistentes com a identidade visual definida para o projeto;
+- Gerenciamento de estado e atualização dinâmica das informações exibidas nas telas;
+- Implementação de autenticação com e-mail, senha e Google OAuth;
+- Integração do Flutter com Supabase Auth, PostgreSQL e Storage;
+- Implementação de operações CRUD para dados persistentes;
+- Upload, atualização e remoção de imagens armazenadas em nuvem;
+- Criação de relacionamentos entre usuários, favoritos, coleções e notificações;
+- Utilização de Row Level Security (RLS) para proteção dos dados;
+- Utilização de chaves estrangeiras e restrições para garantir a integridade do banco de dados;
+- Implementação e tratamento de deep links no Android;
+- Organização do projeto utilizando modelos, telas, serviços e implementações específicas;
+- Utilização do Git e GitHub para versionamento e evolução incremental do projeto;
+- Importância de testes, validação de fluxos e revisão contínua durante o desenvolvimento.
 
-As próximas atividades incluem:
+A evolução entre os Checkpoints permitiu aplicar progressivamente os conceitos estudados na disciplina, partindo da idealização e do protótipo até uma aplicação integrada a um backend real.
 
-### 🔐 Integrações de autenticação
+---
 
-- Manter a autenticação com Google validada;
-- Avaliar a configuração definitiva do login com Apple quando estiverem disponíveis as credenciais necessárias do Apple Developer Program.
+# 🔄 Melhorias futuras
 
-### 🎨 Interface e experiência
+Com as funcionalidades principais do MVP implementadas, possíveis evoluções futuras do NutriGo incluem:
 
-- Realizar a revisão visual das telas em relação ao protótipo;
-- Refinar eventuais diferenças de espaçamento, tipografia e componentes;
-- Revisar a responsividade das principais interfaces.
+- Recomendações de receitas personalizadas de acordo com as preferências do usuário;
+- Planejamento de refeições e cardápios;
+- Ampliação das categorias e filtros de receitas;
+- Melhorias adicionais de responsividade para diferentes tamanhos de tela;
+- Expansão dos recursos sociais;
+- Análises e estatísticas adicionais sobre a atividade do usuário;
+- Otimizações de desempenho e experiência de uso.
 
-### 🧪 Testes e validação
+Essas melhorias não fazem parte dos requisitos principais do MVP entregue no Checkpoint 6, mas representam possibilidades de evolução futura do produto.
 
-- Realizar testes finais dos principais fluxos da aplicação;
-- Validar o comportamento com diferentes usuários;
-- Realizar testes de regressão das funcionalidades já implementadas;
-- Revisar possíveis erros e inconsistências.
+---
 
-### 📱 Preparação da entrega
+# 📦 Checkpoint 6 — App Final
 
-- Atualizar as imagens das interfaces utilizadas na documentação;
-- Revisar a documentação final do projeto;
-- Gerar e validar o APK Android;
-- Confirmar a execução do projeto sem problemas utilizando `flutter analyze`;
-- Preparar a versão final para apresentação acadêmica.
+Para o Checkpoint 6, o NutriGo apresenta:
+
+- Funcionalidades principais do MVP implementadas;
+- Aplicação desenvolvida em Flutter/Dart;
+- Backend integrado ao Supabase;
+- Autenticação com e-mail, senha e Google OAuth;
+- Persistência dos dados no PostgreSQL;
+- Armazenamento de imagens no Supabase Storage;
+- CRUD de receitas;
+- Sistema de favoritos e coleções;
+- Recursos sociais de seguidores e usuários seguidos;
+- Sistema de notificações;
+- Preferências e configurações persistentes;
+- Políticas de segurança com Row Level Security;
+- Documentação completa do projeto;
+- Arquitetura e organização do código documentadas;
+- Responsabilidades dos integrantes documentadas;
+- Histórico de evolução mantido no GitHub;
+- Validação estática realizada com `flutter analyze`, sem problemas identificados.
+
+A etapa final restante é a geração do APK Android em modo release e a validação do arquivo instalável em dispositivo ou emulador.
 
 ---
 
 # 📚 Projeto acadêmico
 
-Projeto desenvolvido para a disciplina de **CPAD**, utilizando Flutter e Dart como tecnologias principais para o desenvolvimento da aplicação.
+Projeto desenvolvido para a disciplina de **Cross-Platform Application Development (CPAD)**, utilizando Flutter e Dart como tecnologias principais para o desenvolvimento da aplicação.
 
-O projeto evolui de forma incremental, mantendo o repositório atualizado conforme novas funcionalidades são implementadas e testadas.
+O projeto foi desenvolvido de forma incremental ao longo dos Checkpoints, evoluindo da idealização e definição visual para um protótipo funcional e, posteriormente, para uma aplicação integrada ao Supabase com persistência de dados, autenticação, armazenamento de arquivos e recursos sociais.
